@@ -24,7 +24,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const seoMeta = getHomeSeoMeta();
 
   return (
-    <div className="space-y-16 py-4 sm:py-6">
+    <div className="space-y-10 sm:space-y-16 py-3 sm:py-6 overflow-x-hidden max-w-full">
       {/* Dynamic SEO & Programmatic Head */}
       <SEOHead
         title={seoMeta.title}

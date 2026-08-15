@@ -87,7 +87,7 @@ export const AppContent: React.FC = () => {
 
   return (
     <div
-      className={`bg-[#fbf9f5] text-[#141413] selection:bg-[#c2410c]/20 selection:text-[#9a3412] flex flex-col font-sans ${
+      className={`bg-[#fbf9f5] text-[#141413] selection:bg-[#c2410c]/20 selection:text-[#9a3412] flex flex-col font-sans overflow-x-hidden max-w-full ${
         isVisaDetailPage || isAdminPage ? 'h-screen overflow-hidden' : 'min-h-screen'
       }`}
     >
@@ -107,7 +107,7 @@ export const AppContent: React.FC = () => {
         className={
           isVisaDetailPage || isAdminPage
             ? 'flex-1 w-full h-[calc(100vh-64px)] overflow-hidden'
-            : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8'
+            : 'flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 overflow-x-hidden'
         }
       >
         <Routes>

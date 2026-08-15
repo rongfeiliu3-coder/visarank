@@ -93,7 +93,7 @@ export const TopNav: React.FC<TopNavProps> = ({
         </Link>
 
         {/* Right-Aligned Minimalist Navigation Cluster */}
-        <div className="flex items-center gap-6 sm:gap-7">
+        <div className="flex items-center gap-2 sm:gap-5 md:gap-6">
           {/* 1. Global Overview Text Link */}
           <Link
             to="/"
@@ -110,14 +110,14 @@ export const TopNav: React.FC<TopNavProps> = ({
                 setIsCountryDropdownOpen(false);
                 setIsUserDropdownOpen(false);
               }}
-              className="flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors py-1 cursor-pointer"
+              className="flex items-center gap-0.5 sm:gap-1 text-xs font-medium text-stone-700 hover:text-stone-900 transition-colors py-2 px-1 cursor-pointer min-h-[44px]"
             >
-              <span>赛道对比</span>
+              <span>赛道</span>
               <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform duration-200 ${isTrackDropdownOpen ? 'rotate-180 text-stone-700' : ''}`} />
             </button>
 
             {isTrackDropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-[#faf9f5] border border-[#e6dfd8] shadow-card-hover p-1.5 space-y-0.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 top-full mt-1 w-64 rounded-2xl bg-[#faf9f5] border border-[#e6dfd8] shadow-card-hover p-1.5 space-y-0.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                 <div className="px-3 py-1.5 text-[10px] font-mono text-stone-400 font-bold uppercase tracking-wider">
                   8大专业留存对比
                 </div>
@@ -159,14 +159,14 @@ export const TopNav: React.FC<TopNavProps> = ({
                 setIsTrackDropdownOpen(false);
                 setIsUserDropdownOpen(false);
               }}
-              className="flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors py-1 cursor-pointer"
+              className="flex items-center gap-0.5 sm:gap-1 text-xs font-medium text-stone-700 hover:text-stone-900 transition-colors py-2 px-1 cursor-pointer min-h-[44px]"
             >
-              <span>法案智库</span>
+              <span>法案</span>
               <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform duration-200 ${isCountryDropdownOpen ? 'rotate-180 text-stone-700' : ''}`} />
             </button>
 
             {isCountryDropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-60 rounded-2xl bg-[#faf9f5] border border-[#e6dfd8] shadow-card-hover p-1.5 space-y-0.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 top-full mt-1 w-60 rounded-2xl bg-[#faf9f5] border border-[#e6dfd8] shadow-card-hover p-1.5 space-y-0.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                 <div className="px-3 py-1.5 text-[10px] font-mono text-stone-400 font-bold uppercase tracking-wider">
                   单一国家立法打分树
                 </div>
@@ -203,7 +203,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           {onOpenSavedHistory && (
             <button
               onClick={onOpenSavedHistory}
-              className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors cursor-pointer min-h-[44px]"
               title="查看已保存的测算方案"
             >
               <Clock className="w-3.5 h-3.5 text-stone-400" />
@@ -215,11 +215,11 @@ export const TopNav: React.FC<TopNavProps> = ({
           {onOpenConsultation && (
             <button
               onClick={onOpenConsultation}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#c2410c] hover:text-[#9a3412] bg-[#c2410c]/8 hover:bg-[#c2410c]/15 px-3 py-1.5 rounded-xl border border-[#c2410c]/20 transition-all cursor-pointer shadow-xs"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-[#c2410c] hover:text-[#9a3412] bg-[#c2410c]/8 hover:bg-[#c2410c]/15 px-3 py-1.5 rounded-xl border border-[#c2410c]/20 transition-all cursor-pointer shadow-xs min-h-[36px]"
               title="主理人 1v1 方案咨询与文书精修"
             >
               <MessageCircle className="w-3.5 h-3.5 text-[#c2410c]" />
-              <span>1v1 方案咨询</span>
+              <span>1v1 咨询</span>
             </button>
           )}
 
@@ -229,7 +229,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               <div className="flex items-center">
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="w-7 h-7 rounded-full bg-[#181715] text-[#faf9f5] flex items-center justify-center text-xs font-mono font-bold hover:scale-105 transition-transform cursor-pointer shadow-xs"
+                  className="w-8 h-8 rounded-full bg-[#181715] text-[#faf9f5] flex items-center justify-center text-xs font-mono font-bold hover:scale-105 transition-transform cursor-pointer shadow-xs"
                   title={user?.name || user?.email}
                 >
                   {userInitial}
@@ -251,10 +251,22 @@ export const TopNav: React.FC<TopNavProps> = ({
                           setIsUserDropdownOpen(false);
                           onOpenSavedHistory();
                         }}
-                        className="w-full text-left px-3 py-1.5 rounded-xl text-xs text-stone-700 hover:bg-[#efe9de] flex items-center gap-1.5 cursor-pointer"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-stone-700 hover:bg-[#efe9de] flex items-center gap-1.5 cursor-pointer min-h-[44px]"
                       >
                         <Clock className="w-3.5 h-3.5 text-stone-400" />
                         <span>我的历史档案</span>
+                      </button>
+                    )}
+                    {onOpenConsultation && (
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          onOpenConsultation();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-[#c2410c] hover:bg-[#fff7ed] flex items-center gap-1.5 cursor-pointer min-h-[44px]"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-[#c2410c]" />
+                        <span>预约 1v1 咨询</span>
                       </button>
                     )}
                     <button
@@ -262,7 +274,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                         setIsUserDropdownOpen(false);
                         logout();
                       }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs text-[#c64545] hover:bg-[#faeaea] flex items-center gap-1.5 cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-[#c64545] hover:bg-[#faeaea] flex items-center gap-1.5 cursor-pointer min-h-[44px]"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>退出登录</span>
@@ -273,7 +285,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             ) : (
               <button
                 onClick={() => openAuthModal('login')}
-                className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors cursor-pointer py-2 px-1 min-h-[44px]"
               >
                 <UserIcon className="w-3.5 h-3.5 text-stone-400" />
                 <span>登录</span>
@@ -281,15 +293,15 @@ export const TopNav: React.FC<TopNavProps> = ({
             )}
           </div>
 
-          {/* 6. Primary Action CTA: Coral Solid Button */}
+          {/* 7. Primary Action CTA: Coral Solid Button */}
           <button
             onClick={onOpenAssessment}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#cc785c] hover:bg-[#b86246] active:bg-[#9a3412] text-white text-xs font-semibold shadow-xs transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-[#cc785c] hover:bg-[#b86246] active:bg-[#9a3412] text-white text-xs font-semibold shadow-xs transition-all duration-150 transform hover:-translate-y-0.5 cursor-pointer min-h-[38px]"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>开始智能测算</span>
-            <span className="text-[9px] font-mono bg-white/20 px-1.5 py-0.2 rounded font-bold">免费</span>
-            <ArrowRight className="w-3 h-3 hidden sm:inline" />
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span className="whitespace-nowrap">智能测算</span>
+            <span className="text-[9px] font-mono bg-white/20 px-1 py-0.2 rounded font-bold hidden xs:inline">免费</span>
+            <ArrowRight className="w-3 h-3 hidden sm:inline shrink-0" />
           </button>
         </div>
       </div>

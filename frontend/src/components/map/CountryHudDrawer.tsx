@@ -79,14 +79,17 @@ export const CountryHudDrawer: React.FC<CountryHudDrawerProps> = ({
     <AnimatePresence>
       <motion.aside
         key={countryCode + activeTrackId}
-        initial={{ x: 420, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: 420, opacity: 0 }}
+        initial={{ y: 240, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 240, opacity: 0 }}
         transition={{ type: 'spring', damping: 26, stiffness: 240 }}
-        className="absolute top-3 right-3 bottom-3 w-80 sm:w-[420px] z-30 flex flex-col justify-between rounded-3xl bg-[#faf8f5]/95 backdrop-blur-xl border border-[#e6dfd8] shadow-[0_20px_48px_rgba(24,23,21,0.16)] p-5 sm:p-6 overflow-y-auto select-none"
+        className="fixed inset-x-0 bottom-0 max-h-[85vh] z-50 rounded-t-3xl md:rounded-3xl bg-[#faf8f5]/98 backdrop-blur-xl border-t md:border border-[#e6dfd8] shadow-[0_-10px_40px_rgba(24,23,21,0.18)] md:shadow-[0_20px_48px_rgba(24,23,21,0.16)] p-4 sm:p-6 overflow-y-auto select-none md:absolute md:top-3 md:right-3 md:bottom-3 md:left-auto md:w-[420px] md:max-h-none flex flex-col justify-between safe-bottom"
       >
+        {/* Mobile Pull Indicator */}
+        <div className="w-10 h-1 rounded-full bg-stone-300 mx-auto mb-2 md:hidden shrink-0" />
+
         {/* Top Content Area */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* 1. Header: Flag, Name, Official Portal Badge & Close */}
           <div className="space-y-3 border-b border-[#e6dfd8] pb-3.5">
             <div className="flex items-start justify-between gap-3">

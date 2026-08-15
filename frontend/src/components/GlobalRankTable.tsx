@@ -261,7 +261,7 @@ export const GlobalRankTable: React.FC<GlobalRankTableProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto">
+          <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
             {[
               { key: 'ALL', label: '全部通路' },
               { key: 'points', label: '打分制居留' },

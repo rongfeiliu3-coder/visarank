@@ -86,14 +86,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       />
 
       {/* Main Dialog Box */}
-      <div className="relative bg-[#faf8f5] border border-[#e6dfd8] rounded-3xl shadow-2xl max-w-xl w-full p-6 sm:p-8 space-y-6 overflow-hidden z-10 animate-scale-up my-auto">
+      <div className="relative bg-[#faf8f5] border border-[#e6dfd8] rounded-3xl shadow-2xl max-w-xl w-full p-5 sm:p-8 space-y-4 sm:space-y-6 max-h-[90vh] overflow-y-auto my-auto z-10 animate-scale-up">
         {/* Subtle Decorative Gradient Blur */}
         <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#c2410c]/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 p-2 rounded-2xl hover:bg-[#efe9de] transition-colors cursor-pointer"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 text-stone-400 hover:text-stone-700 p-2 rounded-2xl hover:bg-[#efe9de] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
           title="关闭"
         >
           <X className="w-5 h-5" />
@@ -116,7 +116,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <div className="pt-2">
               <button
                 onClick={handleClose}
-                className="px-6 py-2.5 rounded-xl bg-[#181715] hover:bg-[#c2410c] text-white text-xs font-bold font-sans transition-all cursor-pointer shadow-xs"
+                className="px-6 py-2.5 rounded-xl bg-[#181715] hover:bg-[#c2410c] text-white text-xs font-bold font-sans transition-all cursor-pointer shadow-xs min-h-[44px]"
               >
                 完成并返回
               </button>
@@ -124,16 +124,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           </div>
         ) : (
           /* Input Form */
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             {/* Header */}
-            <div className="space-y-1.5 pr-8">
+            <div className="space-y-1 pr-6">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#c2410c]/10 text-[#c2410c] text-[11px] font-mono font-bold">
                   <Flag className="w-3 h-3" />
                   政策众包纠错与意见箱
                 </span>
               </div>
-              <h2 className="font-serif text-2xl font-bold text-stone-900 leading-tight">
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 leading-tight">
                 提交政策变动 / 体验建议
               </h2>
               <p className="text-xs text-stone-600 leading-relaxed font-sans">
@@ -143,9 +143,9 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
             {/* Context Badge if visa specified */}
             {(visaName || visaId) && (
-              <div className="p-3 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] flex items-center justify-between text-xs">
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-stone-800 font-medium truncate">
-                  <span className="text-[#c2410c] font-bold">🏛️ 当前关联法案：</span>
+                  <span className="text-[#c2410c] font-bold">🏛️ 关联法案：</span>
                   <span className="font-serif font-bold truncate">{visaName || visaId}</span>
                 </div>
                 <span className="text-[10px] font-mono text-stone-500 shrink-0">已自动绑定</span>
@@ -155,25 +155,25 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             {/* Category Selector Tabs */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-stone-900 font-mono">反馈类型</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {[
                   {
                     key: 'correction',
-                    label: '政策参数有误',
+                    label: '政策有误',
                     icon: Flag,
-                    desc: '薪资/年龄/打分有变',
+                    desc: '薪资/年龄变动',
                   },
                   {
                     key: 'official_gazette',
-                    label: '最新官方公报',
+                    label: '官方公报',
                     icon: FileText,
-                    desc: '发布新法案改革',
+                    desc: '发布新法案',
                   },
                   {
                     key: 'suggestion',
-                    label: '产品功能建议',
+                    label: '功能建议',
                     icon: Lightbulb,
-                    desc: '体验优化或新需求',
+                    desc: '体验新需求',
                   },
                 ].map((tab) => {
                   const Icon = tab.icon;
@@ -183,7 +183,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                       key={tab.key}
                       type="button"
                       onClick={() => setCategory(tab.key as any)}
-                      className={`p-2.5 rounded-2xl border text-center transition-all cursor-pointer ${
+                      className={`p-2 sm:p-2.5 rounded-2xl border text-center transition-all cursor-pointer min-h-[44px] flex flex-col items-center justify-center ${
                         active
                           ? 'bg-[#181715] text-[#faf9f5] border-stone-900 shadow-xs'
                           : 'bg-[#faf9f5] hover:bg-[#efe9de] text-stone-700 border-[#e6dfd8]'
@@ -193,7 +193,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                         <Icon className="w-3 h-3" />
                         <span>{tab.label}</span>
                       </div>
-                      <div className="text-[10px] opacity-75 font-mono">{tab.desc}</div>
+                      <div className="text-[9px] sm:text-[10px] opacity-75 font-mono">{tab.desc}</div>
                     </button>
                   );
                 })}
@@ -201,7 +201,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             </div>
 
             {/* Detailed Content Textarea */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-stone-900 font-mono flex items-center justify-between">
                 <span>详细纠错或建议内容 (必填)</span>
                 <span className="text-[10px] text-stone-400 font-mono">{content.length}/500 字</span>
@@ -209,7 +209,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value.slice(0, 500))}
-                rows={4}
+                rows={3}
                 placeholder={
                   category === 'correction'
                     ? '例如：新西兰绿名单 Tier 1 时薪门槛在 2026 年最新公报中已调整为中位数 1.5 倍（约 NZD $49.33/hr），建议更新计算规则...'
@@ -217,12 +217,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     ? '例如：德国联邦移民局 BAMF 发布了关于机会卡找工签的补充细则，官方公报链接如下...'
                     : '请描述您在测算、选校或对比过程中遇到的不便或希望新增的工具功能...'
                 }
-                className="w-full p-3.5 rounded-2xl bg-[#ffffff] border border-[#e6dfd8] text-xs text-stone-800 focus:outline-none focus:border-[#c2410c] placeholder:text-stone-400 leading-relaxed resize-none font-sans"
+                className="w-full p-3 rounded-2xl bg-[#ffffff] border border-[#e6dfd8] text-base sm:text-xs text-stone-800 focus:outline-none focus:border-[#c2410c] placeholder:text-stone-400 leading-relaxed resize-none font-sans"
               />
             </div>
 
             {/* Contact Input (Optional) */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-stone-900 font-mono flex items-center justify-between">
                 <span>联系方式 (选填)</span>
                 <span className="text-[10px] text-stone-400">微信 / 邮箱 / 电话</span>
@@ -231,8 +231,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 type="text"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="填写后便于我们在更新政策或发放致谢礼时与您同步..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#ffffff] border border-[#e6dfd8] text-xs text-stone-800 focus:outline-none focus:border-[#c2410c] placeholder:text-stone-400 font-sans"
+                placeholder="填写后便于我们在更新政策时与您同步..."
+                className="w-full px-3.5 py-2 rounded-xl bg-[#ffffff] border border-[#e6dfd8] text-base sm:text-xs text-stone-800 focus:outline-none focus:border-[#c2410c] placeholder:text-stone-400 font-sans"
               />
             </div>
 
@@ -245,24 +245,24 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             )}
 
             {/* Footer Buttons */}
-            <div className="pt-2 flex items-center justify-between border-t border-[#e6dfd8]">
-              <div className="text-[11px] font-mono text-stone-400 flex items-center gap-1">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e6dfd8]">
+              <div className="text-[10px] sm:text-[11px] font-mono text-stone-400 flex items-center gap-1">
                 <HeartHandshake className="w-3.5 h-3.5" />
                 <span>开源众包 · 共建全球精准移民中台</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 rounded-xl bg-[#efe9de] hover:bg-[#e4ddd2] text-stone-700 text-xs font-semibold font-sans transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#efe9de] hover:bg-[#e4ddd2] text-stone-700 text-xs font-semibold font-sans transition-colors cursor-pointer min-h-[44px]"
                 >
                   取消
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-bold font-sans shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-bold font-sans shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 min-h-[44px]"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{isSubmitting ? '提交中...' : '提交纠错与建议'}</span>

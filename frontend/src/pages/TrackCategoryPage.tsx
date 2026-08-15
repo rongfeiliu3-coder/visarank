@@ -66,7 +66,7 @@ export const TrackCategoryPage: React.FC<TrackCategoryPageProps> = ({
       </div>
 
       {/* 2. Top Track Switcher Pills (1:1 with OpenTheRank L2) */}
-      <div className="p-1.5 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] flex items-center gap-1.5 overflow-x-auto">
+      <div className="p-1.5 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] flex flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
         {TRACKS_DATA.map((t) => {
           const isActive = t.id === currentTrack.id;
           const isWarning = t.riskOverall === 'strict';
@@ -90,8 +90,8 @@ export const TrackCategoryPage: React.FC<TrackCategoryPageProps> = ({
       </div>
 
       {/* 3. Page Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <h1 className="font-serif text-3xl sm:text-5xl font-bold text-stone-900 tracking-tight">
+      <div className="text-center max-w-3xl mx-auto space-y-3 px-2 sm:px-0">
+        <h1 className="font-serif text-2xl sm:text-4xl md:text-5xl font-bold text-stone-900 tracking-tight leading-tight">
           全球 {currentTrack.name.split(' (')[0]} 留存与工签决策矩阵
         </h1>
         <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">

@@ -1820,7 +1820,7 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
                     value={specificJobOrMajor}
                     onChange={(e) => setSpecificJobOrMajor(e.target.value)}
                     placeholder="输入具体专业或工种名称..."
-                    className="w-full px-4 py-3 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-xs font-medium text-stone-800 focus:outline-none focus:border-[#c2410c]"
+                    className="w-full px-4 py-3 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-base sm:text-xs font-medium text-stone-800 focus:outline-none focus:border-[#c2410c]"
                   />
                 </div>
               </motion.div>
@@ -2598,7 +2598,7 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
         )}
 
         {/* Drawer Bottom Action Toolbar */}
-        <div className="p-4 sm:p-5 border-t border-[#e6dfd8] bg-[#efe9de]/50 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-t border-[#e6dfd8] bg-[#efe9de]/50 flex items-center justify-between safe-bottom">
           {isCalculating ? (
             <div className="w-full flex items-center justify-center py-2 text-xs font-mono text-stone-600 gap-2">
               <Sparkles className="w-4 h-4 text-[#c2410c] animate-spin" />
@@ -2607,7 +2607,7 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
           ) : currentStep > 1 && currentStep < 7 ? (
             <button
               onClick={() => setCurrentStep((s) => (s - 1) as any)}
-              className="px-4 py-2.5 rounded-xl bg-[#faf9f5] hover:bg-[#efe9de] text-stone-700 text-xs font-semibold border border-[#e6dfd8] flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#faf9f5] hover:bg-[#efe9de] text-stone-700 text-xs font-semibold border border-[#e6dfd8] flex items-center gap-1.5 transition-colors cursor-pointer min-h-[44px]"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>上一步</span>
@@ -2619,7 +2619,7 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
           {!isCalculating && (currentStep < 6 ? (
             <button
               onClick={handleNextStep}
-              className="px-6 py-2.5 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-semibold flex items-center gap-1.5 shadow-card-hover transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-semibold flex items-center gap-1.5 shadow-card-hover transition-all cursor-pointer min-h-[44px]"
             >
               <span>下一步</span>
               <ChevronRight className="w-4 h-4" />
@@ -2627,16 +2627,16 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
           ) : currentStep === 6 ? (
             <button
               onClick={handleTriggerCalculate}
-              className="px-8 py-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-semibold flex items-center gap-2 shadow-card-hover transition-all cursor-pointer"
+              className="px-6 sm:px-8 py-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-semibold flex items-center gap-2 shadow-card-hover transition-all cursor-pointer min-h-[44px]"
             >
               <Sparkles className="w-4 h-4" />
-              <span>生成全球 14 国逆向选国梯队</span>
+              <span>生成 14 国逆向选国梯队</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl bg-[#181715] hover:bg-stone-800 text-white text-xs font-semibold transition-colors cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#181715] hover:bg-stone-800 text-white text-xs font-semibold transition-colors cursor-pointer min-h-[44px]"
             >
               完成并返回大盘
             </button>

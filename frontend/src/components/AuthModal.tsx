@@ -67,25 +67,25 @@ export const AuthModal: React.FC = () => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-        className="relative w-full max-w-md bg-[#faf9f5] border border-[#e6dfd8] shadow-2xl rounded-3xl overflow-hidden z-10 p-6 sm:p-8 space-y-5"
+        className="relative w-full max-w-md bg-[#faf9f5] border border-[#e6dfd8] shadow-2xl rounded-3xl z-10 p-5 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto my-auto"
       >
         {/* Close Button */}
         <button
           onClick={closeAuthModal}
-          className="absolute top-5 right-5 p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-[#efe9de] transition-colors cursor-pointer"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-[#efe9de] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
           title="关闭"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efe9de] border border-[#e6dfd8] text-xs text-stone-700 font-mono">
-            <Sparkles className="w-3.5 h-3.5 text-[#c2410c]" />
+        <div className="space-y-1.5 pr-6">
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#efe9de] border border-[#e6dfd8] text-[11px] text-stone-700 font-mono">
+            <Sparkles className="w-3 h-3 text-[#c2410c]" />
             <span>VISARANK 决策智库账号</span>
           </div>
 
-          <h2 className="font-serif text-2xl font-bold text-stone-900 leading-tight">
+          <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 leading-tight">
             {mode === 'login' ? '登录以管理您的出海方案' : '免费注册专属决策画像'}
           </h2>
           <p className="text-xs text-stone-500 leading-relaxed">
@@ -104,7 +104,7 @@ export const AuthModal: React.FC = () => {
         )}
 
         {/* Value Proposition Highlights */}
-        <div className="bg-[#efe9de]/60 p-3.5 rounded-2xl border border-[#e6dfd8] space-y-2 text-xs text-stone-700">
+        <div className="bg-[#efe9de]/60 p-3 rounded-2xl border border-[#e6dfd8] space-y-1.5 text-xs text-stone-700">
           <div className="flex items-center gap-2 text-[11px]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981] flex-shrink-0" />
             <span>永久云端保存多份选国对比方案</span>
@@ -128,43 +128,43 @@ export const AuthModal: React.FC = () => {
         )}
 
         {/* Form Inputs */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {mode === 'register' && (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-stone-800 font-mono">您的称呼 / 昵称</label>
               <div className="relative">
-                <UserIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+                <UserIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="例如: 程序员阿海"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-xs text-stone-900 focus:outline-none focus:border-[#c2410c]"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-base sm:text-xs text-stone-900 focus:outline-none focus:border-[#c2410c]"
                 />
               </div>
             </div>
           )}
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-bold text-stone-800 font-mono">电子邮箱 (Email)</label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+              <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-xs text-stone-900 focus:outline-none focus:border-[#c2410c]"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-base sm:text-xs text-stone-900 focus:outline-none focus:border-[#c2410c]"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="text-xs font-bold text-stone-800 font-mono">密码 (Password)</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+              <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
                 required
@@ -172,7 +172,7 @@ export const AuthModal: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="至少 6 位字符"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-xs text-stone-900 focus:outline-none focus:border-[#c2410c]"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#faf9f5] border border-[#e6dfd8] text-base sm:text-xs text-stone-900 focus:outline-none focus:border-[#c2410c]"
               />
             </div>
           </div>
@@ -180,7 +180,7 @@ export const AuthModal: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-card-hover transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-card-hover transition-all cursor-pointer disabled:opacity-50 min-h-[44px]"
           >
             {submitting ? (
               <span>处理中...</span>

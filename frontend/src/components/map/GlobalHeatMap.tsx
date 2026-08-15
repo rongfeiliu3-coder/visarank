@@ -286,7 +286,7 @@ export const GlobalHeatMap: React.FC<GlobalHeatMapProps> = ({
   return (
     <section id="decision-map" className="space-y-4 max-w-6xl mx-auto select-none">
       {/* 1. Track Pills Selector (8 Major Professional Tracks) */}
-      <div className="p-1.5 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] flex items-center gap-1.5 overflow-x-auto">
+      <div className="p-1.5 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] flex flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
         {TRACKS_DATA.map((t) => {
           const isActive = t.id === activeTrackId;
           return (

@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     background-color: #faf9f5;
     color: #141413;
@@ -12,6 +18,35 @@
   h1, h2, h3, .font-serif {
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
+
+  /* Prevent iOS Safari from zooming in on input focus */
+  @media screen and (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* iOS Safe Area Utilities */
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-bottom-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-top-pt {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Warm Cream Editorial Card & Table Styles */
