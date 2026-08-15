@@ -46,6 +46,26 @@ app.get('/robots.txt', (c) => {
   });
 });
 
+// Root API Landing & Status
+app.get('/', (c) => {
+  return c.json({
+    name: 'VisaRank Intelligence Matrix API',
+    version: '1.0.0',
+    status: 'operational',
+    frontendUrl: 'https://visarank.pages.dev',
+    docs: 'https://github.com/rongfeiliu3-coder/visarank',
+    endpoints: [
+      '/api/countries',
+      '/api/visas',
+      '/api/occupations',
+      '/api/evaluate',
+      '/api/health',
+      '/sitemap.xml',
+      '/robots.txt',
+    ],
+  });
+});
+
 // Health check
 app.get('/api/health', (c) => {
   return c.json({
