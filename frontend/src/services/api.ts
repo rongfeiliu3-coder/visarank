@@ -14,8 +14,9 @@ import type {
   UserAssessmentRecord,
 } from '@emigrant/shared';
 
-const API_BASE = '/api';
-const AUTH_TOKEN_KEY = 'emigrant_auth_token';
+const envApiUrl = (import.meta as any).env?.VITE_API_URL;
+const API_BASE = (envApiUrl ? String(envApiUrl).replace(/\/+$/, '') : '') + '/api';
+const AUTH_TOKEN_KEY = 'visarank_auth_token';
 
 export function getStoredAuthToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);

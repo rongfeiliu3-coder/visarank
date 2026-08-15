@@ -1,4 +1,4 @@
-name = "emigrant-api"
+name = "visarank-api"
 main = "src/index.ts"
 compatibility_date = "2024-09-01"
 compatibility_flags = ["nodejs_compat"]
@@ -10,10 +10,10 @@ ADMIN_SECRET = "visarank2026_master_key"
 # Cloudflare D1 Database Binding
 [[d1_databases]]
 binding = "DB"
-database_name = "emigrant_db"
-database_id = "emigrant-d1-local-id"
+database_name = "visarank-db"
+database_id = "b2559d32-173c-45fd-b423-a37230602667"
 
 # Cloudflare KV Namespace Binding
 [[kv_namespaces]]
 binding = "POLICY_CACHE"
-id = "emigrant-kv-cache-id"
+id = "f69cf4a7fe8447babdd197b656ae3a8d"
