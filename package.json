@@ -1,0 +1,32 @@
+{
+  "name": "emigrant-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Edge-Native Study Abroad / Work Visa / Immigration Smart Evaluation Platform",
+  "workspaces": [
+    "shared",
+    "worker",
+    "frontend"
+  ],
+  "scripts": {
+    "build:sitemap": "tsx scripts/generate-sitemap.ts",
+    "build": "npm run build:sitemap && npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:worker": "npm run dev --workspace=worker",
+    "d1:local": "wrangler d1 execute emigrant_db --local --file=d1/schema.sql && wrangler d1 execute emigrant_db --local --file=d1/seed.sql"
+  },
+  "keywords": [
+    "immigration",
+    "visa-evaluation",
+    "cloudflare-workers",
+    "hono",
+    "json-logic",
+    "react"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "tsx": "^4.23.12"
+  }
+}

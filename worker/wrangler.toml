@@ -1,0 +1,19 @@
+name = "emigrant-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+ADMIN_SECRET = "visarank2026_master_key"
+
+# Cloudflare D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "emigrant_db"
+database_id = "emigrant-d1-local-id"
+
+# Cloudflare KV Namespace Binding
+[[kv_namespaces]]
+binding = "POLICY_CACHE"
+id = "emigrant-kv-cache-id"

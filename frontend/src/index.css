@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #faf9f5;
+    color: #141413;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, .font-serif {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  }
+}
+
+/* Warm Cream Editorial Card & Table Styles */
+.cream-card {
+  background-color: #efe9de;
+  border: 1px solid #e6dfd8;
+  border-radius: 12px;
+}
+
+.cream-card-soft {
+  background-color: #f5f0e8;
+  border: 1px solid #e6dfd8;
+  border-radius: 12px;
+}
+
+.cream-card-interactive {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cream-card-interactive:hover {
+  background-color: #e8e0d2;
+  border-color: #d8cfc4;
+}
+
+/* Custom Editorial Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #faf9f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d8cfc4;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cc785c;
+}

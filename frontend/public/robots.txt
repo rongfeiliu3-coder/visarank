@@ -1,0 +1,20 @@
+# ==============================================================================
+# VisaRank Production Robots Configuration
+# https://visarank.com
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /#/
+Allow: /#/tracks/*
+Allow: /#/visas/*
+
+# Disallow indexing internal admin and management paths
+Disallow: /admin
+Disallow: /#/admin
+Disallow: /api/admin
+Disallow: /api/admin/*
+Disallow: /api/auth/
+
+# Specify Sitemap location
+Sitemap: https://visarank.com/sitemap.xml

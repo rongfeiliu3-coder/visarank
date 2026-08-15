@@ -1,0 +1,24 @@
+{
+  "name": "@emigrant/worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Workers edge API for Emigrant platform",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emigrant/shared": "*",
+    "hono": "^4.6.0",
+    "json-logic-js": "^2.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "@types/json-logic-js": "^2.0.8",
+    "typescript": "^5.5.4",
+    "wrangler": "^3.78.0"
+  }
+}

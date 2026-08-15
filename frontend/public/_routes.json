@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/assets/*",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/og-image.png",
+    "/og-image.jpg",
+    "/wechat-qr.png",
+    "/wechat-qr.jpg",
+    "/world-110m.json"
+  ]
+}
