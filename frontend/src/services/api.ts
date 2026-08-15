@@ -14,8 +14,8 @@ import type {
   UserAssessmentRecord,
 } from '@emigrant/shared';
 
-const envApiUrl = (import.meta as any).env?.VITE_API_URL;
-const API_BASE = (envApiUrl ? String(envApiUrl).replace(/\/+$/, '') : '') + '/api';
+const envApiUrl = (import.meta as any).env?.VITE_API_URL || 'https://visarank-api.rongfeiliu3.workers.dev';
+const API_BASE = String(envApiUrl).replace(/\/+$/, '') + '/api';
 const AUTH_TOKEN_KEY = 'visarank_auth_token';
 
 export function getStoredAuthToken(): string | null {
@@ -199,6 +199,22 @@ export async function fetchAdminFeedbacks(secret: string): Promise<{ success: bo
     });
     if (!res.ok) {
       return { success: false, error: '获取反馈数据失败' };
+    }
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function fetchAdminUsers(secret: string): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/admin/users?secret=${encodeURIComponent(secret)}`, {
+      headers: {
+        'X-Admin-Secret': secret,
+      },
+    });
+    if (!res.ok) {
+      return { success: false, error: '获取用户列表失败' };
     }
     return await res.json();
   } catch (err: any) {

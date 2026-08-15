@@ -167,20 +167,19 @@ export const ReportUnlockModal: React.FC<ReportUnlockModalProps> = ({
                 </div>
               </div>
 
-              {/* Price & Checkout Footer Action */}
+              {/* Price & Free Early-Bird Unlock Footer Action */}
               <div className="p-4 rounded-2xl bg-[#efe9de] border border-[#e6dfd8] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xs text-stone-500 line-through font-mono">$49.9</span>
-                    <span className="font-serif text-2xl font-bold text-[#c2410c] font-mono">
-                      $9.9 <span className="text-xs text-stone-600 font-sans">/ ¥69</span>
+                    <span className="font-serif text-xl font-bold text-[#c2410c] font-mono">
+                      早鸟限免
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#eaf6ed] text-[#2e7d32] font-bold border border-[#c5e8ce]">
-                      限时 2 折
+                      0 元限时解锁
                     </span>
                   </div>
                   <div className="text-[10px] text-stone-500 mt-0.5">
-                    单次解锁永久可读 · 支持多次调整画像免费重新推演
+                    解锁后永久可读 · 支持多次调整画像免费重新推演
                   </div>
                 </div>
 
@@ -194,7 +193,7 @@ export const ReportUnlockModal: React.FC<ReportUnlockModalProps> = ({
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      <span>立即解锁完整研报 ($9.9 / ¥69)</span>
+                      <span>免费解锁完整 3 年落地推演</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

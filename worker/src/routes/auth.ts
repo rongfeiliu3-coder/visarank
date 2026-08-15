@@ -38,24 +38,26 @@ authRouter.post('/register', async (c) => {
     const passwordHash = await hashPassword(password);
     const now = new Date().toISOString();
     const displayName = name?.trim() || normalizedEmail.split('@')[0];
+    const role = normalizedEmail === 'rongfeiliu3@gmail.com' ? 'admin' : 'user';
 
     await c.env.DB.prepare(
-      `INSERT INTO users (id, email, password_hash, name, created_at, last_login_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (id, email, password_hash, name, role, created_at, last_login_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-      .bind(userId, normalizedEmail, passwordHash, displayName, now, now)
+      .bind(userId, normalizedEmail, passwordHash, displayName, role, now, now)
       .run();
 
     const user = {
       id: userId,
       email: normalizedEmail,
       name: displayName,
+      role,
       createdAt: now,
       lastLoginAt: now,
     };
 
     const token = await signJwt(
-      { userId, email: normalizedEmail },
+      { userId, email: normalizedEmail, role },
       c.env.JWT_SECRET
     );
 
@@ -111,16 +113,19 @@ authRouter.post('/login', async (c) => {
         .catch((e) => console.error('Failed to update last_login_at:', e))
     );
 
+    const userRole = row.role || (normalizedEmail === 'rongfeiliu3@gmail.com' ? 'admin' : 'user');
+
     const user = {
       id: row.id,
       email: row.email,
       name: row.name || row.email.split('@')[0],
+      role: userRole,
       createdAt: row.created_at,
       lastLoginAt: now,
     };
 
     const token = await signJwt(
-      { userId: row.id, email: row.email },
+      { userId: row.id, email: row.email, role: userRole },
       c.env.JWT_SECRET
     );
 
@@ -156,7 +161,7 @@ authRouter.get('/me', async (c) => {
       return c.json({ success: false, error: 'Token 无效或已过期' }, 401);
     }
 
-    const row: any = await c.env.DB.prepare(`SELECT id, email, name, created_at, last_login_at FROM users WHERE id = ?`)
+    const row: any = await c.env.DB.prepare(`SELECT id, email, name, role, created_at, last_login_at FROM users WHERE id = ?`)
       .bind(payload.userId)
       .first();
 
@@ -164,10 +169,13 @@ authRouter.get('/me', async (c) => {
       return c.json({ success: false, error: '用户不存在' }, 404);
     }
 
+    const userRole = row.role || (row.email === 'rongfeiliu3@gmail.com' ? 'admin' : 'user');
+
     const user = {
       id: row.id,
       email: row.email,
       name: row.name || row.email.split('@')[0],
+      role: userRole,
       createdAt: row.created_at,
       lastLoginAt: row.last_login_at,
     };

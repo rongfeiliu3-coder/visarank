@@ -4,7 +4,7 @@ import { X, Sparkles, Lock, Mail, User as UserIcon, ArrowRight, CheckCircle2, Al
 import { useAuth } from '../context/AuthContext';
 
 export const AuthModal: React.FC = () => {
-  const { isAuthModalOpen, authModalMode, closeAuthModal, login, register, triggerPendingAction } = useAuth();
+  const { isAuthModalOpen, authModalMode, authModalPrompt, closeAuthModal, login, register, triggerPendingAction } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>(authModalMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -67,7 +67,7 @@ export const AuthModal: React.FC = () => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-        className="relative w-full max-w-md bg-[#faf9f5] border border-[#e6dfd8] shadow-2xl rounded-3xl overflow-hidden z-10 p-6 sm:p-8 space-y-6"
+        className="relative w-full max-w-md bg-[#faf9f5] border border-[#e6dfd8] shadow-2xl rounded-3xl overflow-hidden z-10 p-6 sm:p-8 space-y-5"
       >
         {/* Close Button */}
         <button
@@ -94,6 +94,14 @@ export const AuthModal: React.FC = () => {
               : '一键保存当前测算记录，解锁 3 年落地时间线与政策变动预警。'}
           </p>
         </div>
+
+        {/* Custom Auth Prompt / Access Guard Banner */}
+        {authModalPrompt && (
+          <div className="p-3 rounded-2xl bg-[#fff7ed] border border-[#fed7aa] text-xs text-[#c2410c] flex items-start gap-2.5 font-medium leading-relaxed shadow-2xs animate-in fade-in duration-200">
+            <Sparkles className="w-4 h-4 text-[#c2410c] flex-shrink-0 mt-0.5" />
+            <span>{authModalPrompt}</span>
+          </div>
+        )}
 
         {/* Value Proposition Highlights */}
         <div className="bg-[#efe9de]/60 p-3.5 rounded-2xl border border-[#e6dfd8] space-y-2 text-xs text-stone-700">

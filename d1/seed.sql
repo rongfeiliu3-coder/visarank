@@ -102,3 +102,7 @@ INSERT OR REPLACE INTO occupations (id, country_code, standard, code, title, chi
 ('occ_au_261313', 'AU', 'ANZSCO', '261313', 'Software Engineer', '软件工程师', 'Skill Level 1', 'MLTSSL 中长期紧缺', 0, 1, 'ACS (Australian Computer Society)', 'AQF Bachelor Degree', 125000, 'AUD', 'annual', 0, '["Software Engineer", "软件架构师"]', '澳洲中长期紧缺职业清单 (MLTSSL)，可申请 189 / 190 / 491 各类技术移民。', 1),
 ('occ_ca_21232', 'CA', 'NOC_2021', '21232', 'Software Developers and Programmers', '软件开发人员与程序员', 'TEER 1', 'STEM 定向邀请类别', 0, 0, 'WES Canada', 'Bachelor Degree', 95000, 'CAD', 'annual', 0, '["Software Developer", "Software Engineer"]', '加拿大 Express Entry STEM 定向抽选核心职业代码。', 1),
 ('occ_de_2512', 'DE', 'SOC_UK', '2512', 'Software Developers', '软件开发工程师', 'High Skill', 'MINT 紧缺职业', 1, 0, 'ZAB (Zentralstelle für ausländisches Bildungswesen)', 'Anabin H+ 认可本科学位', 68000, 'EUR', 'annual', 0, '["Softwareentwickler", "Informatiker"]', '德国欧盟蓝卡紧缺 MINT 职业，法定年薪降至 €41,041 即可获批。', 1);
+
+-- 4. Initial Admin User (Rongfei)
+INSERT OR REPLACE INTO users (id, email, password_hash, name, role, created_at, last_login_at) VALUES
+('usr_admin_rongfei', 'rongfeiliu3@gmail.com', 'e4c1c8bec357d273a67de2d925d919fd:88e40352f0a2f4883c67de70a49bad55bba5273b5c10b6e7d4c190b0e02aba1a', 'Rongfei (Admin)', 'admin', '2026-08-01 00:00:00', datetime('now'));

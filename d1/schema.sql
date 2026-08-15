@@ -141,12 +141,13 @@ CREATE TABLE IF NOT EXISTS evaluation_logs (
 
 CREATE INDEX IF NOT EXISTS idx_evaluation_logs_visa ON evaluation_logs(visa_id, created_at);
 
--- 7. Users Table (Progressive Auth)
+-- 7. Users Table (Progressive Auth & RBAC)
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     name TEXT,
+    role TEXT DEFAULT 'user',
     created_at TEXT DEFAULT (datetime('now')),
     last_login_at TEXT
 );

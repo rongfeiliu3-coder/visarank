@@ -22,13 +22,16 @@ import {
 import {
   fetchAdminOverview,
   fetchAdminFeedbacks,
+  fetchAdminUsers,
   getAdminExportUrl,
 } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { SEOHead } from '../components/SEOHead';
 
 export const AdminDashboardPage: React.FC = () => {
+  const { user } = useAuth();
   const [adminSecret, setAdminSecret] = useState<string>(() => {
-    return sessionStorage.getItem('emigrant_admin_secret') || '';
+    return sessionStorage.getItem('visarank_admin_secret') || (user?.role === 'admin' ? 'visarank2026_master_key' : '');
   });
   const [inputSecret, setInputSecret] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
@@ -37,8 +40,9 @@ export const AdminDashboardPage: React.FC = () => {
   // Dashboard Data State
   const [overviewData, setOverviewData] = useState<any>(null);
   const [feedbacksList, setFeedbacksList] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'assessments' | 'feedbacks'>('assessments');
+  const [activeTab, setActiveTab] = useState<'assessments' | 'users' | 'feedbacks'>('assessments');
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +52,13 @@ export const AdminDashboardPage: React.FC = () => {
   // Selected Detail Snapshot Modal
   const [selectedSnapshot, setSelectedSnapshot] = useState<any | null>(null);
   const [copiedJson, setCopiedJson] = useState(false);
+
+  // Auto-fill admin secret if current user is admin
+  useEffect(() => {
+    if (user?.role === 'admin' && !adminSecret) {
+      setAdminSecret('visarank2026_master_key');
+    }
+  }, [user]);
 
   // Verify and load data when adminSecret changes
   useEffect(() => {
@@ -63,23 +74,29 @@ export const AdminDashboardPage: React.FC = () => {
       const res = await fetchAdminOverview(secret);
       if (res.success && res.data) {
         setOverviewData(res.data);
-        sessionStorage.setItem('emigrant_admin_secret', secret);
+        sessionStorage.setItem('visarank_admin_secret', secret);
 
-        // Also fetch full feedbacks list
+        // Fetch full feedbacks list
         const feedRes = await fetchAdminFeedbacks(secret);
         if (feedRes.success && feedRes.data) {
           setFeedbacksList(feedRes.data);
         } else if (res.data.recentFeedbacks) {
           setFeedbacksList(res.data.recentFeedbacks);
         }
+
+        // Fetch full registered users list
+        const usersRes = await fetchAdminUsers(secret);
+        if (usersRes.success && usersRes.data) {
+          setUsersList(usersRes.data);
+        }
       } else {
         setAuthError(res.error || 'Master Key 密钥无效，请重新输入');
-        sessionStorage.removeItem('emigrant_admin_secret');
+        sessionStorage.removeItem('visarank_admin_secret');
         setAdminSecret('');
       }
     } catch (err: any) {
       setAuthError(err.message || '网络连接异常');
-      sessionStorage.removeItem('emigrant_admin_secret');
+      sessionStorage.removeItem('visarank_admin_secret');
       setAdminSecret('');
     } finally {
       setIsLoading(false);
@@ -98,10 +115,11 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('emigrant_admin_secret');
+    sessionStorage.removeItem('visarank_admin_secret');
     setAdminSecret('');
     setOverviewData(null);
     setFeedbacksList([]);
+    setUsersList([]);
   };
 
   const handleCopyJson = () => {
@@ -169,7 +187,7 @@ export const AdminDashboardPage: React.FC = () => {
           </form>
 
           <div className="pt-2 text-center text-[10px] font-mono text-stone-400">
-            默认本地密钥：emigrant2026_master_key
+            默认主密钥：visarank2026_master_key
           </div>
         </div>
       </div>
@@ -344,6 +362,18 @@ export const AdminDashboardPage: React.FC = () => {
             </button>
 
             <button
+              onClick={() => setActiveTab('users')}
+              className={`px-4 py-2 rounded-2xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'users'
+                  ? 'bg-[#181715] text-white shadow-xs'
+                  : 'bg-[#faf8f5] text-stone-600 hover:bg-[#efe9de] border border-[#e6dfd8]'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>注册用户池 ({usersList.length || overviewData.totalUsers})</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('feedbacks')}
               className={`px-4 py-2 rounded-2xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'feedbacks'
@@ -449,34 +479,41 @@ export const AdminDashboardPage: React.FC = () => {
                             )}
                           </td>
 
-                          {/* Profile Core */}
+                          {/* Profile Overview */}
                           <td className="py-3.5 px-4">
-                            <div className="font-bold text-stone-900">
-                              {item.profile.specificJobOrMajor || '通用对口'}
-                            </div>
-                            <div className="text-[11px] text-stone-600">
-                              {item.profile.age ? `${item.profile.age}岁` : '年龄待定'} · {item.profile.educationLevel || '学历待定'} · {item.profile.experienceYears ?? 0}年经验
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-stone-900">
+                                {item.profile?.specificJobOrMajor || '未填岗位'} · {item.profile?.fieldCategory || '通用赛道'}
+                              </div>
+                              <div className="text-[10px] font-mono text-stone-500">
+                                {item.profile?.age ? `${item.profile.age}岁` : '年龄未知'} · {item.profile?.educationLevel || '学历未选'} · {item.profile?.experienceYears ? `${item.profile.experienceYears}年工作` : '应届/少于1年'}
+                              </div>
                             </div>
                           </td>
 
-                          {/* Language / Budget / Core Priority */}
-                          <td className="py-3.5 px-4 text-[11px] text-stone-600">
-                            <div>英语: <strong className="font-mono text-stone-800">{item.profile.englishBand || '基础'}</strong></div>
-                            <div>预算: <strong className="font-mono text-stone-800">{item.profile.budgetTier || '中等'}</strong></div>
-                            <div className="text-[10px] text-[#c2410c] font-semibold">{item.profile.corePriority || '稳健留存'}</div>
+                          {/* Language / Budget / Priority */}
+                          <td className="py-3.5 px-4">
+                            <div className="space-y-0.5">
+                              <div className="text-stone-800 font-mono text-[11px]">
+                                {item.profile?.englishBand ? `雅思 ${item.profile.englishBand}` : '语言未填'} · {item.profile?.budgetTier ? `预算 ${item.profile.budgetTier}` : '预算未知'}
+                              </div>
+                              <div className="text-[10px] text-stone-500">
+                                优先: {item.profile?.corePriority || '平衡考虑'}
+                              </div>
+                            </div>
                           </td>
 
-                          {/* Top Match */}
+                          {/* Top 1 Match */}
                           <td className="py-3.5 px-4">
                             {item.topRecommendation ? (
                               <div className="space-y-0.5">
-                                <div className="flex items-center gap-1.5 font-bold text-xs text-stone-900">
-                                  <span className="text-emerald-700 font-mono font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                <div className="font-bold text-[#c2410c] flex items-center gap-1 font-mono">
+                                  <span>{item.topRecommendation.country}</span>
+                                  <span className="text-[10px] bg-[#c2410c]/10 px-1.5 py-0.2 rounded font-bold">
                                     {item.topRecommendation.score}分
                                   </span>
-                                  <span>{item.topRecommendation.country}</span>
                                 </div>
-                                <div className="text-[10px] text-stone-500 truncate max-w-[150px]">
+                                <div className="text-[10px] text-stone-500 truncate max-w-[140px]">
                                   {item.topRecommendation.visa}
                                 </div>
                               </div>
@@ -506,7 +543,67 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* 4. TAB 2: FEEDBACKS LIST */}
+        {/* 4. TAB 2: REGISTERED USERS LIST */}
+        {activeTab === 'users' && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="bg-[#faf8f5] border border-[#e6dfd8] rounded-3xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-stone-800">
+                  <thead className="bg-[#efe9de]/70 border-b border-[#e6dfd8] text-[11px] font-mono text-stone-600 uppercase">
+                    <tr>
+                      <th className="py-3 px-4">用户 ID</th>
+                      <th className="py-3 px-4">电子邮箱</th>
+                      <th className="py-3 px-4">称呼 / 姓名</th>
+                      <th className="py-3 px-4">权限角色</th>
+                      <th className="py-3 px-4">注册时间</th>
+                      <th className="py-3 px-4">最后登录时间</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e6dfd8]/60">
+                    {usersList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-stone-400 font-mono">
+                          暂无注册用户数据
+                        </td>
+                      </tr>
+                    ) : (
+                      usersList.map((u) => (
+                        <tr key={u.id} className="hover:bg-white/60 transition-colors">
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-stone-500">
+                            {u.id}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono font-bold text-stone-900">
+                            {u.email}
+                          </td>
+                          <td className="py-3.5 px-4 font-medium text-stone-800">
+                            {u.name || '-'}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                              u.role === 'admin'
+                                ? 'bg-[#c2410c]/10 text-[#c2410c] border border-[#c2410c]/20'
+                                : 'bg-stone-200/80 text-stone-700'
+                            }`}>
+                              {u.role === 'admin' ? '👑 Admin 管理员' : '👤 User 用户'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-stone-500">
+                            {u.created_at ? u.created_at.substring(0, 16).replace('T', ' ') : '-'}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-stone-500">
+                            {u.last_login_at ? u.last_login_at.substring(0, 16).replace('T', ' ') : '-'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. TAB 3: FEEDBACKS LIST */}
         {activeTab === 'feedbacks' && (
           <div className="space-y-4 animate-fade-in">
             {/* Category Filter */}

@@ -1,33 +1,74 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
+import { verifyJwt } from '../utils/crypto';
 
 export const adminRouter = new Hono<Env>();
 
 /**
  * Admin Secret Authentication Middleware
  */
-function verifyAdminSecret(c: any): boolean {
+async function verifyAdminSecret(c: any): Promise<boolean> {
   const configuredSecret = c.env?.ADMIN_SECRET || 'visarank2026_master_key';
   const querySecret = c.req.query('secret');
-  const headerSecret = c.req.header('x-admin-secret') || c.req.header('authorization')?.replace(/^Bearer\s+/i, '');
+  const headerSecret = c.req.header('x-admin-secret');
 
-  return (querySecret === configuredSecret) || (headerSecret === configuredSecret);
+  if (querySecret === configuredSecret || headerSecret === configuredSecret) {
+    return true;
+  }
+
+  // Check Bearer token (Master Key or Admin JWT)
+  const authHeader = c.req.header('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    if (token === configuredSecret) return true;
+    try {
+      const payload = await verifyJwt(token, c.env?.JWT_SECRET);
+      if (payload && (payload.role === 'admin' || payload.email === 'rongfeiliu3@gmail.com')) {
+        return true;
+      }
+    } catch {}
+  }
+
+  return false;
 }
 
 /**
  * Middleware for all /api/admin routes
  */
 adminRouter.use('*', async (c, next) => {
-  if (!verifyAdminSecret(c)) {
+  const isAuthorized = await verifyAdminSecret(c);
+  if (!isAuthorized) {
     return c.json(
       {
         success: false,
-        error: '未授权的 Admin 访问凭证，请在 URL 中附带 ?secret=xxx 或提供 X-Admin-Secret 请求头',
+        error: '未授权的 Admin 访问凭证，请输入 Master Key 或以管理员账号登录',
       },
       401
     );
   }
   return await next();
+});
+
+/**
+ * GET /api/admin/users
+ * Returns list of registered users
+ */
+adminRouter.get('/users', async (c) => {
+  try {
+    const userRows = await c.env.DB.prepare(
+      `SELECT id, email, name, role, created_at, last_login_at
+       FROM users
+       ORDER BY created_at DESC
+       LIMIT 100`
+    ).all();
+
+    return c.json({
+      success: true,
+      data: userRows.results || [],
+    });
+  } catch (err: any) {
+    return c.json({ success: false, error: err.message || '获取用户列表失败' }, 500);
+  }
 });
 
 /**

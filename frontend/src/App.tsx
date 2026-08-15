@@ -3,7 +3,7 @@ import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-d
 import { HelmetProvider } from 'react-helmet-async';
 import type { Country, CountryCode, UserAssessmentRecord } from '@emigrant/shared';
 import { fetchCountries, fetchVisas } from './services/api';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { SavedAssessmentsDrawer } from './components/SavedAssessmentsDrawer';
 import { ConsultationModal } from './components/ConsultationModal';
@@ -16,6 +16,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AssessmentDrawer } from './components/AssessmentDrawer';
 
 export const AppContent: React.FC = () => {
+  const { isAuthenticated, openAuthModal } = useAuth();
   const location = useLocation();
   const isVisaDetailPage = location.pathname.startsWith('/visas/');
   const isAdminPage = location.pathname.startsWith('/admin');
@@ -48,6 +49,22 @@ export const AppContent: React.FC = () => {
   };
 
   const handleOpenAssessment = (countryCode?: CountryCode) => {
+    if (!isAuthenticated) {
+      openAuthModal(
+        'login',
+        () => {
+          setSelectedAssessmentRecord(null);
+          if (countryCode) {
+            setDrawerTargetCountry(countryCode);
+            setActiveCountry(countryCode);
+          }
+          setIsDrawerOpen(true);
+        },
+        '💡 请先登录 VisaRank 账号，系统将永久同步您的 14 国测算画像与历史底牌'
+      );
+      return;
+    }
+
     setSelectedAssessmentRecord(null);
     if (countryCode) {
       setDrawerTargetCountry(countryCode);

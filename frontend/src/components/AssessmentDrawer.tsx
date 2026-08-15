@@ -2565,7 +2565,7 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
                               className="px-3.5 py-1.5 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>$9.9 解锁完整推演研报</span>
+                              <span>📋 免费获取 3 年落地推演 (早鸟限时)</span>
                             </button>
 
                             <button

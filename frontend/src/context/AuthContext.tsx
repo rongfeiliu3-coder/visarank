@@ -18,7 +18,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthModalOpen: boolean;
   authModalMode: 'login' | 'register';
-  openAuthModal: (mode?: 'login' | 'register', onSuccess?: () => void) => void;
+  authModalPrompt: string | null;
+  openAuthModal: (mode?: 'login' | 'register', onSuccess?: () => void, prompt?: string) => void;
   closeAuthModal: () => void;
   authModalOnSuccess: (() => void) | null;
   triggerPendingAction: () => void;
@@ -32,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [authModalPrompt, setAuthModalPrompt] = useState<string | null>(null);
   const [authModalOnSuccess, setAuthModalOnSuccess] = useState<(() => void) | null>(null);
 
   // Initialize Auth state on mount
@@ -84,14 +86,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
   };
 
-  const openAuthModal = (mode: 'login' | 'register' = 'login', onSuccess?: () => void) => {
+  const openAuthModal = (mode: 'login' | 'register' = 'login', onSuccess?: () => void, prompt?: string) => {
     setAuthModalMode(mode);
+    setAuthModalPrompt(prompt || null);
     setAuthModalOnSuccess(() => onSuccess || null);
     setIsAuthModalOpen(true);
   };
 
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
+    setAuthModalPrompt(null);
     setAuthModalOnSuccess(null);
   };
 
@@ -114,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout: handleLogout,
         isAuthModalOpen,
         authModalMode,
+        authModalPrompt,
         openAuthModal,
         closeAuthModal,
         authModalOnSuccess,

@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  role?: 'admin' | 'user';
   createdAt: string;
   lastLoginAt?: string;
 }
@@ -9,6 +10,7 @@ export interface User {
 export interface AuthTokenPayload {
   userId: string;
   email: string;
+  role?: 'admin' | 'user';
   exp: number;
 }
 
