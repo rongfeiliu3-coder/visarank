@@ -23,8 +23,8 @@ async function generateSitemap() {
 
   // 1. Load Tracks
   const { TRACKS_DATA } = await import('../shared/src/data/tracks.ts');
-  const trackIds = Object.keys(TRACKS_DATA);
-  console.log(`📦 Loaded ${trackIds.length} Professional Tracks`);
+  const canonicalTrackIds = ['cs_ai', 'healthcare', 'education', 'engineering', 'business', 'media', 'design', 'law'];
+  console.log(`📦 Loaded ${canonicalTrackIds.length} Canonical Professional Tracks`);
 
   // 2. Load Visas from Shared and Frontend Registry
   const { ALL_COUNTRY_VISAS } = await import('../shared/src/data/visas.ts');
@@ -47,7 +47,7 @@ async function generateSitemap() {
   });
 
   // 2. Level 2 Tracks Category Pages
-  trackIds.forEach((trackId) => {
+  canonicalTrackIds.forEach((trackId) => {
     sitemapEntries.push({
       loc: `${SITE_DOMAIN}/#/tracks/${trackId}`,
       lastmod: CURRENT_DATE,

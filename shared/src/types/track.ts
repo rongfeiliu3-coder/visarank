@@ -1,14 +1,40 @@
 import type { CountryCode } from './country';
 
+export type CanonicalTrackId =
+  | 'cs_ai'
+  | 'healthcare'
+  | 'education'
+  | 'engineering'
+  | 'business'
+  | 'media'
+  | 'design'
+  | 'law';
+
 export type TrackId =
+  | CanonicalTrackId
   | 'it_ai'
-  | 'engineering_trades'
   | 'nursing_health'
   | 'early_childhood'
+  | 'engineering_trades'
   | 'finance_business'
   | 'biotech_pharma'
-  | 'hospitality_culinary'
-  | 'creative_design';
+  | 'creative_design'
+  | 'law_humanities'
+  | 'hospitality_culinary';
+
+export function canonicalTrackId(id?: string): CanonicalTrackId {
+  if (!id) return 'cs_ai';
+  const clean = id.toLowerCase().trim();
+  if (clean === 'it_ai' || clean === 'cs_ai' || clean === 'cs' || clean === 'it') return 'cs_ai';
+  if (clean === 'healthcare' || clean === 'nursing_health' || clean === 'nursing') return 'healthcare';
+  if (clean === 'education' || clean === 'early_childhood' || clean === 'edu') return 'education';
+  if (clean === 'engineering' || clean === 'engineering_trades' || clean === 'eng') return 'engineering';
+  if (clean === 'business' || clean === 'finance_business' || clean === 'biz' || clean === 'finance') return 'business';
+  if (clean === 'media' || clean === 'biotech_pharma' || clean === 'digital_media') return 'media';
+  if (clean === 'design' || clean === 'creative_design' || clean === 'architecture') return 'design';
+  if (clean === 'law' || clean === 'law_humanities' || clean === 'humanities') return 'law';
+  return 'cs_ai';
+}
 
 export interface TrackScoreBreakdown {
   policyFriendliness: number;  // 政策友好度 (0~10, weight: 35%)

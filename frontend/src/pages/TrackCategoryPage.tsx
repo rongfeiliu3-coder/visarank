@@ -11,6 +11,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import type { CountryCode } from '@emigrant/shared';
+import { canonicalTrackId } from '@emigrant/shared';
 import { TRACKS_DATA } from '../data/mockTracks';
 import { SEOHead } from '../components/SEOHead';
 import { getTrackSeoMeta } from '../utils/seoUtils';
@@ -26,7 +27,9 @@ export const TrackCategoryPage: React.FC<TrackCategoryPageProps> = ({
   const navigate = useNavigate();
 
   const currentTrack =
-    TRACKS_DATA.find((t) => t.id === trackId) || TRACKS_DATA[0]!;
+    TRACKS_DATA.find(
+      (t) => t.id === trackId || (trackId && canonicalTrackId(t.id) === canonicalTrackId(trackId))
+    ) || TRACKS_DATA[0]!;
 
   const seoMeta = getTrackSeoMeta(currentTrack);
 

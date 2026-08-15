@@ -7,15 +7,15 @@ import {
   ArrowRight,
   ShieldAlert,
   ChevronRight,
-  Compass,
-  ExternalLink,
   Building2,
   Scale,
+  Compass,
+  ExternalLink,
   MessageCircle,
   AlertTriangle,
 } from 'lucide-react';
-import type { CountryCode, TrackId } from '@emigrant/shared';
-import { TRACKS_DATA } from '@emigrant/shared';
+import type { CountryCode } from '@emigrant/shared';
+import { getTrackCountryScore } from '@emigrant/shared';
 import {
   COUNTRY_VIEWPORTS,
   CATEGORY_TAG_CONFIG,
@@ -32,7 +32,7 @@ interface CountryHudDrawerProps {
 
 export const CountryHudDrawer: React.FC<CountryHudDrawerProps> = ({
   countryCode,
-  activeTrackId = 'it_ai',
+  activeTrackId = 'cs_ai',
   activeTrackName = '计算机与人工智能',
   onClose,
   onOpenAssessment,
@@ -45,18 +45,17 @@ export const CountryHudDrawer: React.FC<CountryHudDrawerProps> = ({
   const data = COUNTRY_VIEWPORTS[countryCode];
   if (!data) return null;
 
-  // Retrieve 100% track-specific details from master TRACKS_DATA
-  const trackObj = TRACKS_DATA[activeTrackId as TrackId] || TRACKS_DATA.it_ai;
-  const trackDetail = trackObj.countryRankings[countryCode];
+  // Retrieve 100% track-specific details from master TRACK_COUNTRY_MATRIX
+  const trackScore = getTrackCountryScore(activeTrackId, countryCode);
 
-  const scores = trackDetail?.scores || {
-    policyFriendliness: 7.5,
-    prCertainty: 7.5,
-    jobAndSalaryMatch: 7.5,
-    lowBarrierIndex: 7.0,
-    compositeScore: data.stayFriendlyScore,
-    tier: (data.stayFriendlyScore >= 8.5 ? 'GREEN' : data.stayFriendlyScore < 6.8 ? 'RED' : 'YELLOW') as 'GREEN' | 'YELLOW' | 'RED',
-    tierLabel: data.stayFriendlyScore >= 8.5 ? '宽松 · 红利直通' : data.stayFriendlyScore < 6.8 ? '紧缩 · 高压劝退' : '适中 · 需策略加分',
+  const scores = {
+    policyFriendliness: trackScore.dimensions.policy,
+    prCertainty: trackScore.dimensions.prCertainty,
+    jobAndSalaryMatch: trackScore.dimensions.jobMarket,
+    lowBarrierIndex: trackScore.dimensions.lowFriction,
+    compositeScore: trackScore.compositeScore,
+    tier: trackScore.tier,
+    tierLabel: trackScore.tierLabel,
   };
 
   const getScoreColorClass = (score: number) => {
@@ -69,11 +68,14 @@ export const CountryHudDrawer: React.FC<CountryHudDrawerProps> = ({
     navigate(`/visas/${visaId}`);
   };
 
-  const headline = trackDetail?.headlineMetric || data.keyMetricsSubtitle;
-  const summaryText = trackDetail?.summary || data.summary;
-  const bottlenecks = trackDetail?.fatalBottlenecks || data.fatalBottlenecks;
-  const recommendedVisas = trackDetail?.recommendedVisas || data.topVisas;
-  const isStrictTrack = scores.compositeScore < 6.8;
+  const headline = trackScore.headline;
+  const summaryText = trackScore.verdict;
+  const bottlenecks = trackScore.fatalBottlenecks;
+  const recommendedVisas =
+    trackScore.recommendedVisas && trackScore.recommendedVisas.length > 0
+      ? trackScore.recommendedVisas
+      : data.topVisas;
+  const isStrictTrack = trackScore.tier === 'RED';
 
   return (
     <AnimatePresence>
@@ -267,14 +269,14 @@ export const CountryHudDrawer: React.FC<CountryHudDrawerProps> = ({
           </div>
 
           {/* 5. Humorous Tip & Consultation CTA (For Strict/Red Tracks or Special Guidance) */}
-          {(trackDetail?.humorTip || isStrictTrack) && (
+          {(trackScore.humorTip || isStrictTrack) && (
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#fff7ed] to-[#ffedd5] border border-[#fed7aa] space-y-2.5 shadow-xs">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#c2410c] font-serif">
                 <AlertTriangle className="w-3.5 h-3.5 text-[#c2410c]" />
                 <span>主理人破局提醒 (Reality Check)</span>
               </div>
               <p className="text-[11px] text-[#9a3412] leading-relaxed font-sans">
-                {trackDetail?.humorTip || '该专业在此国技术移民属于高内卷赛道，留存概率较低。建议做好 100% 回国搞钱准备；如决心出海留存，建议尽早进行跨专业/跨国别或技术文书对冲！'}
+                {trackScore.humorTip || '该专业在此国技术移民属于高内卷赛道，留存概率较低。建议做好 100% 回国搞钱准备；如决心出海留存，建议尽早进行跨专业/跨国别或技术文书对冲！'}
               </p>
               {onOpenConsultation && (
                 <button

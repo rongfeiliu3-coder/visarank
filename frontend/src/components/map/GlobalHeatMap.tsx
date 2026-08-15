@@ -8,6 +8,7 @@ import {
 import { geoNaturalEarth1, geoPath, geoGraticule10 } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { CountryCode } from '@emigrant/shared';
+import { getTrackCountryScore } from '@emigrant/shared';
 import countries110m from 'world-atlas/countries-110m.json';
 import { TRACKS_DATA } from '../../data/mockTracks';
 import { COUNTRY_VIEWPORTS } from '../../data/countryViewports';
@@ -150,10 +151,11 @@ export const GlobalHeatMap: React.FC<GlobalHeatMapProps> = ({
   const countryNodes = useMemo(() => {
     return Object.values(COUNTRY_VIEWPORTS).map((country) => {
       const projected = projection(country.center) || [0, 0];
-      const trackMetric = country.trackMetrics[activeTrackId] || {
-        tier: 'YELLOW',
-        badge: '综合评估',
-        score: country.stayFriendlyScore,
+      const scoreDetail = getTrackCountryScore(activeTrackId, country.id);
+      const trackMetric = {
+        tier: scoreDetail.tier,
+        badge: scoreDetail.tierLabel,
+        score: scoreDetail.compositeScore,
       };
 
       const spiderOffset = EUROPE_SPIDER_OFFSETS[country.id];
