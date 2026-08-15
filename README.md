@@ -14,7 +14,7 @@
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-F38020?style=for-the-badge&logo=sqlite&logoColor=white)](https://developers.cloudflare.com/d1/)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge)](https://github.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge)](https://github.com/rongfeiliu3-coder/visarank)
 
 <br />
 
@@ -162,7 +162,7 @@ emigrant-website/
 Clone the repository and install all monorepo dependencies:
 
 ```bash
-git clone https://github.com/your-username/visarank.git
+git clone https://github.com/rongfeiliu3-coder/visarank.git
 cd visarank
 npm install
 ```
