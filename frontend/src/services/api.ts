@@ -196,6 +196,121 @@ export async function streamVerifyAndGenerateReport(
   }
 }
 
+export interface SavedReportItem {
+  id: string;
+  token: string;
+  title: string;
+  context_name: string;
+  profile_snapshot: any;
+  report_markdown: string;
+  created_at: string;
+}
+
+const LOCAL_REPORTS_KEY = 'visarank_saved_reports_v1';
+
+export function getLocalSavedReports(): SavedReportItem[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_REPORTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalReport(report: SavedReportItem): void {
+  try {
+    const existing = getLocalSavedReports();
+    const filtered = existing.filter((r) => r.id !== report.id && r.token !== report.token);
+    const updated = [report, ...filtered];
+    localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(updated.slice(0, 30)));
+  } catch (err) {
+    console.error('Failed to save report to localStorage:', err);
+  }
+}
+
+export async function saveUserReport(payload: {
+  token: string;
+  title: string;
+  contextName: string;
+  profileSnapshot: any;
+  reportMarkdown: string;
+}): Promise<{ success: boolean; reportId?: string; error?: string }> {
+  // Always persist to localStorage first
+  const localItem: SavedReportItem = {
+    id: `rep_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    token: payload.token,
+    title: payload.title,
+    context_name: payload.contextName,
+    profile_snapshot: payload.profileSnapshot,
+    report_markdown: payload.reportMarkdown,
+    created_at: new Date().toISOString(),
+  };
+  saveLocalReport(localItem);
+
+  try {
+    const authToken = getStoredAuthToken();
+    const res = await fetch(`${API_BASE}/reports/save`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    return await parseResponseJson(res, '保存研报失败');
+  } catch (err: any) {
+    return { success: true, reportId: localItem.id };
+  }
+}
+
+export async function fetchUserSavedReports(tokenQuery?: string): Promise<{
+  success: boolean;
+  data?: SavedReportItem[];
+  error?: string;
+}> {
+  const localReports = getLocalSavedReports();
+  try {
+    const authToken = getStoredAuthToken();
+    const url = tokenQuery
+      ? `${API_BASE}/reports/my-reports?token=${encodeURIComponent(tokenQuery)}`
+      : `${API_BASE}/reports/my-reports`;
+
+    const res = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+    });
+
+    const json = await parseResponseJson<{ success: boolean; data?: SavedReportItem[]; error?: string }>(
+      res,
+      '获取研报失败'
+    );
+
+    if (json.success && json.data && json.data.length > 0) {
+      // Merge remote and local
+      const map = new Map<string, SavedReportItem>();
+      localReports.forEach((r) => map.set(r.id, r));
+      json.data.forEach((r: any) => {
+        map.set(r.id, {
+          id: r.id,
+          token: r.token,
+          title: r.title,
+          context_name: r.context_name,
+          profile_snapshot: typeof r.profile_snapshot === 'string' ? JSON.parse(r.profile_snapshot) : r.profile_snapshot,
+          report_markdown: r.report_markdown,
+          created_at: r.created_at,
+        });
+      });
+      return { success: true, data: Array.from(map.values()) };
+    }
+
+    return { success: true, data: localReports };
+  } catch {
+    return { success: true, data: localReports };
+  }
+}
+
 export async function fetchCurrentUser(): Promise<{ success: boolean; user?: User; error?: string }> {
   const token = getStoredAuthToken();
   if (!token) {

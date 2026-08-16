@@ -89,3 +89,45 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #cc785c;
 }
+
+/* Print optimization for VisaRank Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  nav, footer, .no-print, header, [title="关闭"] {
+    display: none !important;
+  }
+
+  .report-print-container {
+    position: static !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .report-markdown-canvas {
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+  }
+
+  table {
+    page-break-inside: avoid !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border: 1px solid #d1d5db !important;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid !important;
+  }
+}

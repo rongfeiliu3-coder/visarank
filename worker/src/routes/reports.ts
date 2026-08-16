@@ -1,7 +1,18 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
+import { verifyJwt } from '../utils/crypto';
 
 export const reportsRouter = new Hono<Env>();
+
+async function extractUserId(c: any): Promise<string | null> {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  const token = authHeader.substring(7);
+  const payload = await verifyJwt(token, c.env.JWT_SECRET);
+  return payload ? payload.userId : null;
+}
 
 // Predefined Master Tokens that can be used repeatedly without consumption
 const MASTER_TOKENS = new Set([
@@ -50,7 +61,7 @@ reportsRouter.post('/verify-and-generate', async (c) => {
           return c.json(
             {
               success: false,
-              error: '该激活兑换码已被使用（防重放拦截），无法重复生成报告。如需新报告请前往小红书购买',
+              error: '该激活兑换码已被使用（防重放拦截），无法重复生成。如需新报告请前往小红书购买',
             },
             400
           );
@@ -94,64 +105,113 @@ reportsRouter.post('/verify-and-generate', async (c) => {
       }
     }
 
-    // 2. Prepare Structured Context for DeepSeek
-    const profileSummary = `
-- 目标评估上下文 / 意向国别与签证: ${userProfile.target_country || userProfile.contextName || '全球多国横向对比'}
-- 年龄: ${userProfile.age ? `${userProfile.age} 岁` : '28 岁 (黄金年龄段)'}
-- 专业赛道: ${userProfile.major || userProfile.track || 'CS / 计算机科学与人工智能'}
-- 最高学历: ${userProfile.education || '硕士研究生 (海外/国内对口全日制)'}
-- 语言成绩: ${userProfile.language_score || userProfile.english || 'PTE 79+ / 雅思 8.0 等效高分'}
-- 技能工作经验: ${userProfile.experience_years ? `${userProfile.experience_years} 年` : '3 年相关全职经验'}
-- 预计前期预算: ${userProfile.budget || '30 - 50 万人民币'}
-- 家庭随行状况: ${userProfile.family_status || '单身独立申请'}
-- 核心诉求: ${userProfile.core_goal || '低试错成本、高 PR 确定性、锁定 3 年内永居直通'}
-    `.trim();
+    // 2. Prepare Formatted Context Variables
+    const ageVal = userProfile.age || '28';
+    const majorVal = userProfile.major || userProfile.track || 'CS / 计算机科学与人工智能';
+    const targetFieldVal = userProfile.target_country || userProfile.contextName || '全球技术移民梯队';
+    const englishVal = userProfile.language_score || userProfile.english || 'PTE 79+ / 雅思 8.0 等效';
+    const budgetVal = userProfile.budget || '30 - 50 万人民币';
+    const eduVal = userProfile.education || '硕士研究生';
+    const expVal = userProfile.experience_years ? `${userProfile.experience_years} 年` : '3 年全职经验';
 
-    const systemPrompt = `
-你是由 VisaRank 全球技术移民量化中台驱动的「资深国际移民法案专家兼劳动力市场精算师」。
-你的任务是为用户量身生成一份结构极其严谨、客观冷静、10+ 页深度的【2026 全球技术移民 10+ 页深度量化推演与避坑研报】。
+    const systemPrompt = `你现在是 VisaRank 的全球移民法案量化精算师与海外劳动力市场战略顾问。
+请根据传入的用户画像 JSON 数据，严格按照以下 Markdown 格式输出一份高度定制、数据严密、彻底剔除中介套路的《2026 全球技术移民与永居确定性量化推演研报》。
 
-核心输出原则：
-1. 严禁中介报喜不报忧，完全基于 2026 财年官方立法公报 (如 INZ / Home Affairs / IRCC / BAMF) 及当地薪资中位数数据库进行推演；
-2. 语言风格：专业、精炼、结构化、富有战略穿透力；
-3. 排版规范：采用清晰 Markdown，包含清晰分级标题、多维对比表格、量化公式与重点标注。
+【硬性输出纪律】：
+1. 严禁任何形式的开场白、客套话或结尾寒暄，第一行直接输出研报标题。
+2. 严禁泛泛而谈的废话，所有建议必须精确到具体数字（时薪、打分项、官方职业代码 ANZSCO/NOC、月份时间线）。
+3. 充分使用 Markdown 表格、引用高亮（> 💡 / > ⚠️ / > 💼）和加粗，确保排版具有投行/咨询公司研报级质感。
 
-必须完整包含以下五大模块：
-# 【VisaRank 2026 全球技术移民 10+ 页深度量化推演与避坑研报】
-**档案序列号**：VR-REP-${Date.now().toString(36).toUpperCase()} | **授权激活码**：${rawToken}
+【报告输出模板】：
 
-## Executive Summary | 核心结论与战略定调
-- 核心画像评估等级与可行性定级
-- 3 大核心破局切入点
+# VisaRank 全球技术移民与永居确定性推演研报（2026 深度版）
 
-## 【模块一】14 国打分细则逐项拆解与被拒/劝退风险推演
-- 年龄、学历、语言、工作经验打分逐项断言
-- 3 大核心拒签/政策断崖风险矩阵表（风险项、触发概率、影响程度、官方判例与防范措施）
+> **用户画像摘要**：${ageVal}岁 | ${majorVal} (${eduVal}) | 目标通道：${targetFieldVal} | 语言基线：${englishVal} | 启动预算：${budgetVal} | 工龄：${expVal}
 
-## 【模块二】目标国职业代码 (ANZSCO / NOC) 官方精准匹配建议
-- 推荐精准职业代码（如 ANZSCO 261313 / 233914 或 NOC 21232）与评估机构 (ACS/EA/VETASSESS/WES)
-- 课程描述与岗位文书避坑点（哪些写法会被机构认定为非紧缺或判定学历扣减）
+---
 
-## 【模块三】真实落地时薪门槛、找工周期与工签转永居概率模型
-- 本地真实找工周期（月度预测）
-- 当地初级/中级岗位起薪与移民局法定中位数时薪（如 NZD $35/hr, GBP £38.7k, EUR €41k）对比
-- PR 转化率精算公式与定级
+## 01. 14 国梯队量化评级与准入矩阵
 
-## 【模块四】专属 36 个月全景出海落地时间线
-- 分为基建期 (M1-6)、蓄力期 (M7-18)、冲刺期 (M19-24)、履约期 (M25-30)、收获期 (M31-36) 的月度颗粒度执行清单
+| 梯队 | 覆盖国家 | 适配度 | 核心法案通道 | 落地中位数时薪门槛 | 核心致命卡点 / 优势 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Tier 1 (极力推荐)** | [国家名] | [90%+] | [具体签证名称] | [当地货币/时薪] | [一句话精准痛点/优势] |
+| **Tier 2 (观察候补)** | [国家名] | [70-89%] | [具体签证名称] | [当地货币/时薪] | [一句话精准痛点/优势] |
+| **Tier 3 (坚决避坑)** | [国家名] | [<70%] | [具体签证名称] | [当地货币/时薪] | [为何不建议：如配额腰斩/排期超长] |
 
-## 【模块五】高 ROI 选校/雇主筛选与文书 (SOP/CV) 排雷准则
-- 选校白名单特征（Co-op、偏远加分、工签政策）
-- 认证雇主背景核验与合规防坑
-- SOP 与技术 CV 逻辑重构要点
+---
+
+## 02. 首选目标国官方打分逐项拆解与差额精算
+
+> 💡 **首选推荐**：[国家名] · [法案名称]
+
+* **当前基础得分拆解**：
+  * 学历分：[X 分]（对应官方认证等级）
+  * 年龄分：[X 分]（距离下一梯队扣分还剩 X 年）
+  * 语言分：[X 分]（提分至 X 可额外获取 X 分）
+  * 本地/海外经验分：[X 分]
+* **获邀/批签门槛分差**：当前得分 [A 分] vs 历史安全获邀线 [B 分]，分差为 **[B - A 分]**。
+* **低成本补分最优解**：
+  1. [具体补分手段 1]
+  2. [具体补分手段 2]
+
+---
+
+## 03. 职业代码（ANZSCO / NOC）匹配与文书合规避坑
+
+* **官方推荐职业代码**：\`[代码 + 英文全称]\`（Skill Level: [X]）
+* **岗位职责（Job Description）重构黄金法则**：
+  * **必须包含的官方加分关键词**：\`[关键词1]\`, \`[关键词2]\`, \`[关键词3]\`
+  * **绝对禁止出现的降级/拒签高危词**：\`[高危词1]\`, \`[高危词2]\`（易被移民局认定为初级低技能岗位）
+* **文书策略评级**：[SOP/CV 需着重突出哪些技术栈与架构经历]
+
+---
+
+## 04. 真实找工与劳动力市场中位数生存模型
+
+| 维度 | 现实数据指标 | 行业基准与避坑提示 |
+| :--- | :--- | :--- |
+| **法定/移民起薪门槛** | [如 NZD $35.00/h] | 官方最新法案硬性红线 |
+| **本地初级岗位中位数时薪** | [实际数据] | 离岸投递回复率极低，建议本地直投 |
+| **本地中级岗位中位数时薪** | [实际数据] | 达标安全线 |
+| **平均找工周期** | [X - X 个月] | 需预留充足现金流 |
+| **前期启动资金消耗速度** | [约 ¥X 万/月] | 建议备足 [X] 个月生存储备金 |
+
+---
+
+## 05. 36 个月全景落地甘特推进表
+
+* **Phase 1 (M01-M06) 离岸准备期**：[语言冲刺目标分 + CV/SOP 重构 + 职业评估材料公证]
+* **Phase 2 (M07-M18) 签证/选校落地期**：[递交时机 + 入学/入境找工 + 积累本地人脉与实习]
+* **Phase 3 (M19-M30) 薪资达标与工签转换期**：[时薪冲击法定中位数 + 锁定合规雇主 Offer]
+* **Phase 4 (M31-M36) 永居/PR 递交与落地期**：[递交 EOI/正式申请 + 应对移民局电调/背调]
+
+---
+
+## 06. 极端情况熔断预案（Plan B 路线）
+
+> ⚠️ **高危突变预警**：若 12 个月内目标国法案发生配额紧缩或薪资门槛上涨，立即启动以下双轨方案：
+* **对冲方案 A**：[转战第二推荐国，如德国蓝卡/爱尔兰 Critical Skills]
+* **对冲方案 B**：[转兼职/境内偏远地区或跨国企业内推]
+
+---
+
+## 07. 72 小时内应立即启动的行动清单
+
+* [ ] **任务 1**：[最紧迫的任务，如锁定学历认证 WES/NZQA 周期]
+* [ ] **任务 2**：[文书与技能树重构要点]
+* [ ] **任务 3**：[语言考试排期锁定]
+
+---
+
+> 💼 **下一步：1v1 技术文书与求职简历精修**
+> 本研报已指明您的职业代码与文书合规风险。如需海外在职工程师及资深学术团队为您进行 **1v1 海外标准简历 (CV) 与 SOP 深度重构**，可联系顾问微信（凭本研报订单号可立减 ¥100 优惠）。
 
 【法律免责声明】
-VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
-    `.trim();
+VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。`;
 
     const apiKey = c.env.DEEPSEEK_API_KEY;
 
-    // 3. If DEEPSEEK_API_KEY is configured, call official DeepSeek API with Streaming SSE
+    // 3. Call official DeepSeek API with Streaming SSE
     if (apiKey) {
       const deepseekPayload = {
         model: 'deepseek-chat',
@@ -159,12 +219,12 @@ VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化�
           { role: 'system', content: systemPrompt },
           {
             role: 'user',
-            content: `请根据以下用户真实背景画像，生成完整的 10+ 页专属深度量化推演研报：\n\n${profileSummary}`,
+            content: `用户画像：\n年龄：${ageVal}\n专业：${majorVal}\n学历：${eduVal}\n语言：${englishVal}\n预算：${budgetVal}\n工龄：${expVal}\n目标：${targetFieldVal}\n请立即输出研报，禁止客套：`,
           },
         ],
         stream: true,
         temperature: 0.3,
-        max_tokens: 4096,
+        max_tokens: 3500,
       };
 
       const deepseekRes = await fetch('https://api.deepseek.com/chat/completions', {
@@ -191,8 +251,8 @@ VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化�
       }
     }
 
-    // 4. Fallback Deterministic Streaming Generator (if API key missing or upstream timeout)
-    const fallbackText = generateDeterministicReport(userProfile, rawToken);
+    // 4. Fallback Deterministic Streaming Generator
+    const fallbackText = generateDeterministicHighDensityReport(userProfile, rawToken);
     const stream = createFallbackSseStream(fallbackText);
 
     return new Response(stream, {
@@ -215,100 +275,173 @@ VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化�
 });
 
 /**
- * Generates structured fallback markdown report when upstream AI is offline
+ * 2. Save Generated Report to D1 Database (/api/reports/save)
  */
-function generateDeterministicReport(profile: any, token: string): string {
-  const target = profile.target_country || profile.contextName || '全球 14 国技术移民梯队';
-  const major = profile.major || profile.track || 'CS / AI 软件与算法研发';
+reportsRouter.post('/save', async (c) => {
+  try {
+    const userId = await extractUserId(c);
+    const body = await c.req.json().catch(() => ({}));
+    const { token, title, contextName, profileSnapshot, reportMarkdown } = body;
 
-  return `# 【VisaRank 2026 全球技术移民 10+ 页深度量化推演与避坑研报】
-**档案序列号**：\`VR-REP-${Date.now().toString(36).toUpperCase()}\` | **授权激活码**：\`${token}\`
-**评估目标**：${target} | **专业赛道**：${major}
-**生成时间**：${new Date().toLocaleString('zh-CN')} | **基准**：2026 财年官方立法公报
+    if (!token || !reportMarkdown) {
+      return c.json({ success: false, error: '缺少研报内容或 Token' }, 400);
+    }
 
----
+    const reportId = `rep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
-## Executive Summary | 核心结论与战略定调
+    await c.env.DB.prepare(
+      `INSERT INTO user_reports (id, user_id, token, title, context_name, profile_snapshot, report_markdown)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        reportId,
+        userId,
+        token,
+        title || '全球技术移民深度推演研报',
+        contextName || '全球多国',
+        typeof profileSnapshot === 'string' ? profileSnapshot : JSON.stringify(profileSnapshot || {}),
+        reportMarkdown
+      )
+      .run();
 
-> 💡 **核心决策总评**：当前海外技术移民已全面从「粗放学历移民」转向「精准雇主技能绑定」与「高薪硬门槛优先」。根据量化推演，单纯依靠海外读研已无法自动确保永居，必须以**第一天选定目标紧缺职业代码 (ANZSCO/NOC)** 并**锁定当地中位数时薪 1.0~1.5 倍的产业带**为核心策略。
-
----
-
-## 【模块一】14 国打分细则逐项拆解与被拒风险推演
-
-### 1.1 量化打分细则与硬门槛匹配矩阵
-- **年龄黄金窗口期**：25 - 32 周岁（得分峰值），33 岁后每年面临分数递减与政策窗口收紧压力；
-- **学历与认证**：海外硕士 (Level 9 / Master) 普遍获得核心支柱分，但需警惕非对口专业导致的职业评估扣减；
-- **语言硬通货**：PTE 65+ (雅思 7.0) 为基本准入门槛，PTE 79+ (雅思 8.0) 具备跨梯队降维打击优势；
-- **本地技能工作经验**：本地 1-3 年合规薪资工作经验为 14 国通用的终极加分项。
-
-### 1.2 致命软肋与核心拒签/劝退风险推演
-| 潜在风险项 | 触发概率 | 影响程度 | 官方判例与防范措施 |
-| :--- | :---: | :---: | :--- |
-| **职业评估不匹配** | 35% | 极高 (一票否决) | 课程描述与 ANZSCO/NOC 核心职责不符，导致职业评估机构 (如 ACS/VETASSESS/EA) 认定为普通从业人员。 |
-| **薪资未达法定中位数** | 42% | 高 (工签受限) | 实际打税薪资低于移民局最新法定要求（如新西兰 NZD $35/hr、英国 £38,700、德国 €41,041），直接无法递交 PR。 |
-| **配额与获邀断崖** | 28% | 中高 (等待期拉长) | 州担保/分类池择优轮候分数水涨船高，低分申请人陷入 2-3 年无效 EOI 排队。 |
-
----
-
-## 【模块二】目标国职业代码 (ANZSCO / NOC) 官方精准匹配建议
-
-### 2.1 推荐对口职业代码与评估权威机构
-- **ANZSCO 261313 (Software Engineer / 软件工程师)** —— 评估机构: ACS
-  - 核心职责契合点：系统架构设计、分布式服务开发、代码重构与 API 规范。
-  - 文书避坑点：严禁将岗位职责写成基础技术支持或网页维护，必须强调系统分析与算法实现。
-- **ANZSCO 233914 (Engineering Technologist / 工程技术专家)** —— 评估机构: Engineers Australia
-  - 核心要求：完整的 CDR (Competency Demonstration Report) 三篇工程项目报告与 CPD 学习证明。
-- **NOC 21232 (Software Developers and Programmers / 加拿大)** —— 评估机构: WES / 雇主LMIA
-  - 关注要点：TEER 1 级别，重点核验薪资流水与税单一致性。
-
----
-
-## 【模块三】真实落地时薪门槛、找工周期与工签转永居概率模型
-
-### 3.1 关键经济指标精算模型
-- **平均真实找工周期**：海外应届硕士约 **3.5 ~ 5.5 个月**（含本地简历改写与 3 轮技术面试周期）；
-- **起薪与中位数对齐度**：初级研发/专业技术岗平均起薪约为中位数标准的 **105% ~ 125%**，具备较强抗通胀与合规达标能力；
-- **工签转永居综合成功率模型**：
-  $$\\text{PR 转化率} = 0.35 \\times \\text{政策确定性} + 0.30 \\times \\text{薪资达标率} + 0.25 \\times \\text{本地供需比} + 0.10 \\times \\text{语言优势}$$
-  当前画像在推荐通道下的综合转化指数为：**88.6% (高确定性梯队)**。
-
----
-
-## 【模块四】专属 36 个月全景出海落地时间线
-
-\`\`\`
-Month 01 - 06: 【基建期】锁定目标国家与签证类别，完成 PTE/雅思首考，递交高校申请与文书重构
-Month 07 - 18: 【蓄力期】入境就读，保持 GPA 3.5+，前置准备实习，参加本地行业 Meetup 与 GitHub 社区贡献
-Month 19 - 24: 【冲刺期】毕业前 6 个月启动校园招聘与内推，锁定合规时薪 Job Offer，无缝换发毕业工签
-Month 25 - 30: 【履约期】积累满 1 年本地技能工龄，完成职业评估全套认证，核验打税税单与 Super/Kiwisaver
-Month 31 - 36: 【收获期】递交 EOI 获邀，上传全套材料清单，完成体检与无犯罪公证，锁定居留获批 (Resident Visa)
-\`\`\`
-
----
-
-## 【模块五】高 ROI 选校/雇主筛选与文书排雷准则
-
-1. **选校核心原则**：优先选择自带 **Co-op 带薪实习**、拥有偏远地区/州担保额外加分（+5分）以及校友网络强大的公立大学；
-2. **雇主背景核验**：确保雇主为移民局认证雇主 (Accredited Employer)，近 2 年无劳工纠纷与重大违规处罚记录；
-3. **文书 (SOP / CV) 重构要点**：
-   - 彻底摒弃「情怀式留学动机」，改为**「以职业生涯路径为轴心的逻辑闭环」**；
-   - 详尽陈述过往项目与海外学习如何完美衔接目标国紧缺产业需求。
-
----
-
-【法律免责声明】
-VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
-  `;
-}
+    return c.json({ success: true, reportId, message: '研报已成功存盘！' });
+  } catch (err: any) {
+    return c.json({ success: false, error: err.message || '研报存盘失败' }, 500);
+  }
+});
 
 /**
- * Creates SSE stream from text chunks
+ * 3. Fetch User Saved Reports (/api/reports/my-reports)
  */
+reportsRouter.get('/my-reports', async (c) => {
+  try {
+    const userId = await extractUserId(c);
+    const tokenQuery = c.req.query('token');
+
+    let query = `SELECT * FROM user_reports WHERE 1=1`;
+    const params: any[] = [];
+
+    if (userId) {
+      query += ` AND user_id = ?`;
+      params.push(userId);
+    } else if (tokenQuery) {
+      query += ` AND token = ?`;
+      params.push(tokenQuery);
+    } else {
+      return c.json({ success: true, data: [] });
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT 20`;
+
+    const results = await c.env.DB.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results.results });
+  } catch (err: any) {
+    return c.json({ success: false, error: err.message || '获取研报列表失败' }, 500);
+  }
+});
+
+/**
+ * High-Density Deterministic Fallback Generator
+ */
+function generateDeterministicHighDensityReport(profile: any, token: string): string {
+  const age = profile.age || '28';
+  const major = profile.major || profile.track || 'CS / 软件与分布式系统';
+  const target = profile.target_country || profile.contextName || '新西兰 SMC 6分制';
+  const english = profile.language_score || profile.english || 'PTE 79+ (等效雅思 8.0)';
+  const budget = profile.budget || '30 - 50 万';
+  const edu = profile.education || '硕士研究生';
+
+  return `# VisaRank 全球技术移民与永居确定性推演研报（2026 深度版）
+
+> **用户画像摘要**：${age}岁 | ${major} (${edu}) | 目标通道：${target} | 语言基线：${english} | 启动预算：${budget}
+
+---
+
+## 01. 14 国梯队量化评级与准入矩阵
+
+| 梯队 | 覆盖国家 | 适配度 | 核心法案通道 | 落地中位数时薪门槛 | 核心致命卡点 / 优势 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Tier 1 (极力推荐)** | 新西兰 | 93% | SMC 6分制技术移民 | NZD $35.00/h (年薪 $7.28w+) | 读研 1.5 年拿 5 分，匹配 1 年全职即可直接锁死 PR。 |
+| **Tier 1 (极力推荐)** | 德国 | 91% | 欧盟蓝卡 (紧缺人才) | EUR €41,041/年 | 计算机紧缺免劳工审查，B1 德语 21 个月闪电换永居。 |
+| **Tier 2 (观察候补)** | 澳大利亚 | 82% | 189/190 独立与州担保 | AUD $73,150/年 (TSMIT) | EOI 轮候分高企，建议绑定偏远地区 491/190。 |
+| **Tier 3 (坚决避坑)** | 加拿大 | 58% | EE Express Entry 联邦技术 | CAD $32.00/h | 池内 500+ 分卷王扎堆，无 LMIA 或法语几乎无法捞起。 |
+
+---
+
+## 02. 首选目标国官方打分逐项拆解与差额精算
+
+> 💡 **首选推荐**：新西兰 · Skilled Migrant Category (SMC 6分制)
+
+* **当前基础得分拆解**：
+  * 学历分：**5 分**（新西兰认可的海外或本地 Level 9 硕士研究生学位）
+  * 年龄分：不参与 6 分累加，但需满足 ≤ 55 岁法定上限
+  * 语言分：达到雅思 6.5 / PTE 58 硬性准入线（您当前已具备 PTE 79+ 优势）
+  * 本地经验分：新西兰本地 1 年全职技能工作经验（**1 分**）
+* **获邀/批签门槛分差**：当前预估满分 **6 分** vs 官方批签线 **6 分**，分差为 **0 分（100% 达标）**。
+* **低成本补分最优解**：
+  1. 毕业后通过 3 年开放工签直接入职合规雇主；
+  2. 确保打税时薪不低于 NZD $35.00/hr（新西兰劳动力时薪中位数）。
+
+---
+
+## 03. 职业代码（ANZSCO / NOC）匹配与文书合规避坑
+
+* **官方推荐职业代码**：\`ANZSCO 261313 (Software Engineer / 软件工程师)\`（Skill Level: 1）
+* **岗位职责（Job Description）重构黄金法则**：
+  * **必须包含的官方加分关键词**：\`System Architecture\`, \`Distributed Backend\`, \`CI/CD Automation\`, \`API Integration\`
+  * **绝对禁止出现的降级/拒签高危词**：\`Helpdesk\`, \`WordPress Maintenance\`, \`Customer IT Support\`（易被判定为低技能扣减工龄）
+* **文书策略评级**：CV 与 SOP 必须着重突出高并发架构与系统设计主导经历，规避基础维护类表述。
+
+---
+
+## 04. 真实找工与劳动力市场中位数生存模型
+
+| 维度 | 现实数据指标 | 行业基准与避坑提示 |
+| :--- | :--- | :--- |
+| **法定/移民起薪门槛** | NZD $35.00/h (年薪 $7.28w) | 官方最新法案硬性红线 |
+| **本地初级岗位中位数时薪** | NZD $38.50/h | 离岸投递回复率极低，建议入境直投 |
+| **本地中级岗位中位数时薪** | NZD $52.00/h | 达标安全线 (高出中位数 148%) |
+| **平均找工周期** | 3.5 - 5.0 个月 | 需预留充足现金流 |
+| **前期启动资金消耗速度** | 约 ¥1.8 - 2.2 万/月 | 建议备足 6 个月生存储备金 |
+
+---
+
+## 05. 36 个月全景落地甘特推进表
+
+* **Phase 1 (M01-M06) 离岸准备期**：锁定 PTE 79+ 成绩，重构英文 CV/SOP，完成学历 NZQA 认证与材料公证
+* **Phase 2 (M07-M18) 签证/选校落地期**：入学就读保持 GPA 3.5+，参加本地 Meetup 社区，前置储备 GitHub 商业项目
+* **Phase 3 (M19-M30) 薪资达标与工签转换期**：毕业换发 3 年工签，锁定时薪 $35+ 认证雇主 Offer，打税满 12 个月
+* **Phase 4 (M31-M36) 永居/PR 递交与落地期**：满 6 分直接在线递交 SMC 申请，完成体检背调，全家锁定永久回头签
+
+---
+
+## 06. 极端情况熔断预案（Plan B 路线）
+
+> ⚠️ **高危突变预警**：若 12 个月内新西兰中位数时薪大幅上调，立即启动以下双轨方案：
+* **对冲方案 A**：转战德国欧盟蓝卡（IT 紧缺人才年薪 €41,041 门槛更低，21 个月直接转永居）；
+* **对冲方案 B**：转战澳大利亚偏远地区 491/190 州担保，叠加 5-15 分偏远加分对冲。
+
+---
+
+## 07. 72 小时内应立即启动的行动清单
+
+* [ ] **任务 1**：核验海外学历是否在国际豁免清单（如不在立即启动 NZQA 预审）
+* [ ] **任务 2**：剔除简历中的 Helpdesk 等低技能高危词，重构以业务架构为轴心的技术栈
+* [ ] **任务 3**：锁定 6 个月生活储备金账户流水，防范移民局审查资金合规性
+
+---
+
+> 💼 **下一步：1v1 技术文书与求职简历精修**  
+> 本研报已指明您的职业代码与文书合规风险。如需海外在职工程师及资深学术团队为您进行 **1v1 海外标准简历 (CV) 与 SOP 深度重构**，可联系顾问微信（凭本研报授权码 \`${token}\` 可立减 ¥100 优惠）。
+
+【法律免责声明】
+VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。`;
+}
+
 function createFallbackSseStream(text: string): ReadableStream {
   const encoder = new TextEncoder();
   let index = 0;
-  const chunkSize = 20;
+  const chunkSize = 25;
 
   return new ReadableStream({
     async start(controller) {
@@ -321,7 +454,7 @@ function createFallbackSseStream(text: string): ReadableStream {
         });
 
         controller.enqueue(encoder.encode(`data: ${ssePayload}\n\n`));
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 15));
       }
 
       controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
