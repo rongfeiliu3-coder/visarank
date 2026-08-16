@@ -25,6 +25,7 @@ import {
   GraduationCap,
   Loader2,
   Cpu,
+  Printer,
 } from 'lucide-react';
 import {
   streamVerifyAndGenerateReport,
@@ -77,6 +78,13 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   const [streamingText, setStreamingText] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
+
+  // Active Report Metadata
+  const [activeReportProfile, setActiveReportProfile] = useState<any>(null);
+  const [activeReportTitle, setActiveReportTitle] = useState<string>('');
+  const [activeReportToken, setActiveReportToken] = useState<string>('');
+  const [activeReportCreatedAt, setActiveReportCreatedAt] = useState<string>('');
 
   // History Assessment Records State (For linking)
   const [historyRecords, setHistoryRecords] = useState<UserAssessmentRecord[]>([]);
@@ -86,7 +94,10 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   // Saved Deep Reports State (For reading previously unlocked reports)
   const [savedReports, setSavedReports] = useState<SavedReportItem[]>([]);
 
-  // Ref for capturing PDF render target
+  // Synchronization & Idempotency Refs
+  const isStreamDoneRef = useRef(false);
+  const streamTextRef = useRef('');
+  const hasSavedRef = useRef(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const contactWeChat = '16621698016';
@@ -124,28 +135,89 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
       setModalState('IDLE');
       setErrorMsg('');
       setCurrentStepIndex(0);
+      setProgressPercent(0);
+      isStreamDoneRef.current = false;
+      streamTextRef.current = '';
+      hasSavedRef.current = false;
     }
   }, [isOpen, currentAssessmentRecord]);
 
-  // Step advancement timer in GENERATING state
+  // Selected assessment record
+  const selectedRecord = historyRecords.find((r) => r.id === selectedRecordId) || historyRecords[0];
+
+  // Ritual 10-Second Countdown & Pipeline Progress Timer (8-12s user experience)
   useEffect(() => {
-    let interval: any = null;
+    let timer: any = null;
     if (modalState === 'GENERATING') {
-      interval = setInterval(() => {
-        setCurrentStepIndex((prev) => {
-          if (prev < GENERATING_STEPS.length - 1) {
-            return prev + 1;
+      const startTime = Date.now();
+      const totalDuration = 10000; // 10.0 seconds ritual
+
+      timer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const rawProgress = Math.min(100, Math.floor((elapsed / totalDuration) * 100));
+
+        // Step mapping based on progress
+        if (rawProgress < 22) {
+          setCurrentStepIndex(0);
+        } else if (rawProgress < 44) {
+          setCurrentStepIndex(1);
+        } else if (rawProgress < 68) {
+          setCurrentStepIndex(2);
+        } else if (rawProgress < 88) {
+          setCurrentStepIndex(3);
+        } else {
+          setCurrentStepIndex(4);
+        }
+
+        // If time is up and stream is ready, finalize!
+        if (rawProgress >= 100) {
+          if (isStreamDoneRef.current) {
+            setProgressPercent(100);
+            clearInterval(timer);
+            setTimeout(() => {
+              completeGeneration();
+            }, 500);
+          } else {
+            // Stay at 99% until background stream finishes
+            setProgressPercent(99);
           }
-          return prev;
-        });
-      }, 1800);
-    } else {
-      setCurrentStepIndex(0);
+        } else {
+          setProgressPercent(rawProgress);
+        }
+      }, 100);
     }
+
     return () => {
-      if (interval) clearInterval(interval);
+      if (timer) clearInterval(timer);
     };
   }, [modalState]);
+
+  const completeGeneration = () => {
+    setModalState('COMPLETED');
+    setIsSaved(true);
+    if (onUnlockAssessment) {
+      onUnlockAssessment(selectedRecord?.id || 'ALL');
+    }
+
+    // Idempotent save to DB & localStorage (only once)
+    if (!hasSavedRef.current) {
+      hasSavedRef.current = true;
+      const profileData = selectedRecord?.profileSnapshot || {};
+      const effectiveTitle = selectedRecord?.title || visaContextName;
+
+      saveUserReport({
+        token: tokenInput.trim(),
+        title: effectiveTitle,
+        contextName: effectiveTitle,
+        profileSnapshot: profileData,
+        reportMarkdown: streamTextRef.current,
+      }).then(() => {
+        fetchUserSavedReports().then((res) => {
+          if (res.success && res.data) setSavedReports(res.data);
+        });
+      });
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -171,11 +243,12 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     }
   };
 
-  const selectedRecord = historyRecords.find((r) => r.id === selectedRecordId) || historyRecords[0];
-
   const handleVerifyAndGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tokenInput.trim()) {
+    if (modalState === 'GENERATING') return; // Anti-reentry guard
+
+    const cleanToken = tokenInput.trim().toUpperCase();
+    if (!cleanToken) {
       setErrorMsg('请输入 16 位激活兑换码');
       return;
     }
@@ -184,15 +257,26 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     setModalState('GENERATING');
     setIsSaved(false);
     setStreamingText('');
+    setProgressPercent(0);
+    setCurrentStepIndex(0);
+    isStreamDoneRef.current = false;
+    streamTextRef.current = '';
+    hasSavedRef.current = false;
 
     const profileData = selectedRecord?.profileSnapshot || {};
     const resultData = selectedRecord?.resultSnapshot || {};
     const effectiveTitle = selectedRecord?.title || visaContextName;
 
+    // Set metadata for Cover Page
+    setActiveReportProfile(profileData);
+    setActiveReportTitle(effectiveTitle);
+    setActiveReportToken(cleanToken);
+    setActiveReportCreatedAt(new Date().toISOString());
+
     let accumulatedText = '';
 
     await streamVerifyAndGenerateReport(
-      tokenInput.trim(),
+      cleanToken,
       {
         contextName: effectiveTitle,
         target_country: effectiveTitle,
@@ -208,27 +292,13 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
       },
       (chunk) => {
         accumulatedText += chunk;
+        streamTextRef.current = accumulatedText;
         setStreamingText((prev) => prev + chunk);
       },
       () => {
-        // Stream completed -> Transition smoothly to COMPLETED
-        setModalState('COMPLETED');
-        setIsSaved(true);
-        if (onUnlockAssessment) {
-          onUnlockAssessment(selectedRecord?.id || 'ALL');
-        }
-        // Auto-save completed report
-        saveUserReport({
-          token: tokenInput.trim(),
-          title: effectiveTitle,
-          contextName: effectiveTitle,
-          profileSnapshot: profileData,
-          reportMarkdown: accumulatedText,
-        }).then(() => {
-          fetchUserSavedReports().then((res) => {
-            if (res.success && res.data) setSavedReports(res.data);
-          });
-        });
+        // Stream completed in background
+        isStreamDoneRef.current = true;
+        streamTextRef.current = accumulatedText;
       },
       (err) => {
         setErrorMsg(err || '激活兑换码无效或已被使用，请检查后重新输入');
@@ -239,6 +309,10 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
 
   const handleOpenSavedReport = (rep: SavedReportItem) => {
     setStreamingText(rep.report_markdown);
+    setActiveReportProfile(rep.profile_snapshot);
+    setActiveReportTitle(rep.title);
+    setActiveReportToken(rep.token);
+    setActiveReportCreatedAt(rep.created_at || new Date().toISOString());
     setIsSaved(true);
     if (onUnlockAssessment) {
       onUnlockAssessment(rep.id);
@@ -253,6 +327,10 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     const filename = `VisaRank-2026-全球技术移民深度推演研报-${dateStr}.pdf`;
     await downloadReportPdf(reportRef.current, filename);
     setDownloadingPdf(false);
+  };
+
+  const handleSystemPrint = () => {
+    window.print();
   };
 
   return (
@@ -287,10 +365,10 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         </button>
 
         {/* ============================================================ */}
-        {/* STATE 1: GENERATING (High-Tech Pipeline Loading State)       */}
+        {/* STATE 1: GENERATING (Ritual 10s Loading + Dynamic Progress)   */}
         {/* ============================================================ */}
         {modalState === 'GENERATING' && (
-          <div className="py-6 sm:py-8 space-y-6">
+          <div className="py-6 sm:py-8 space-y-6 animate-fade-in">
             {/* Header with High-Tech Shimmer */}
             <div className="text-center space-y-2">
               <div className="w-14 h-14 rounded-2xl bg-[#181715] text-[#c2410c] flex items-center justify-center mx-auto shadow-md relative overflow-hidden">
@@ -300,15 +378,31 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
 
               <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#c2410c]/10 text-[#c2410c] text-[11px] font-mono font-bold">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>DeepSeek 深度量化精算引擎运行中</span>
+                <span>DeepSeek 8K 全球移民法案精算引擎运行中</span>
               </div>
 
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
                 正在生成 10+ 页深度量化推演研报
               </h3>
               <p className="text-xs text-stone-500 font-sans max-w-md mx-auto">
-                系统正在对 14 国移民法案、ANZSCO/NOC 职业代码与真实薪资中位数进行多维联合精算...
+                已进入 14 国移民法案联算、ANZSCO/NOC 职业评估及真实中位数时薪建模流水线...
               </p>
+            </div>
+
+            {/* Glowing Shimmer Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-stone-600 font-bold">推演精算进度</span>
+                <span className="text-[#c2410c] font-bold">{progressPercent}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-stone-200 rounded-full overflow-hidden relative">
+                <div
+                  className="h-full bg-gradient-to-r from-[#ea580c] to-[#c2410c] rounded-full transition-all duration-300 relative overflow-hidden"
+                  style={{ width: `${progressPercent}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+                </div>
+              </div>
             </div>
 
             {/* Dynamic 5-Step Pipeline Checklist */}
@@ -322,10 +416,10 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                     key={idx}
                     className={`flex items-center gap-3 p-2 rounded-xl transition-all duration-300 ${
                       isCurrent
-                        ? 'bg-[#fff7ed] border border-[#fed7aa] text-stone-900 font-medium'
+                        ? 'bg-[#fff7ed] border border-[#fed7aa] text-stone-900 font-medium scale-[1.01]'
                         : isFinished
                         ? 'text-stone-700'
-                        : 'text-stone-400 opacity-60'
+                        : 'text-stone-400 opacity-50'
                     }`}
                   >
                     {/* Status Icon */}
@@ -354,19 +448,23 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               })}
             </div>
 
-            {/* Simulated Live Character Stream Counter */}
+            {/* Live Character Stream Counter */}
             <div className="text-center text-[11px] font-mono text-stone-400 flex items-center justify-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              <span>已推演并生成 {streamingText.length} 字符数据 · 即将完成排版</span>
+              <span>
+                {isStreamDoneRef.current
+                  ? '底层推演已完成，正在完成出版级排版装订...'
+                  : `已精算并生成 ${streamingText.length} 字符核心数据`}
+              </span>
             </div>
           </div>
         )}
 
         {/* ============================================================ */}
-        {/* STATE 2: COMPLETED (Full Report Rendered with Direct PDF)     */}
+        {/* STATE 2: COMPLETED (Publication-Grade 10+ Page Render View)  */}
         {/* ============================================================ */}
         {modalState === 'COMPLETED' && (
-          <div className="flex flex-col h-full space-y-3 overflow-hidden">
+          <div className="flex flex-col h-full space-y-3 overflow-hidden animate-fade-in">
             {/* Report Top Action Bar (Enabled only when completed) */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dfd8] pr-8">
               <div className="space-y-1">
@@ -379,13 +477,13 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 </h3>
               </div>
 
-              {/* Action Buttons: Direct PDF Download & Copy */}
+              {/* Action Buttons: Direct PDF Download, Print & Copy */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={handleDirectDownloadPdf}
                   disabled={downloadingPdf}
                   className="px-3.5 py-1.5 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-semibold flex items-center gap-1.5 shadow-card-hover transition-all cursor-pointer disabled:opacity-50 min-h-[36px]"
-                  title="直接下载 PDF 格式研报到您的电脑"
+                  title="直接下载出版级 PDF 研报到您的电脑"
                 >
                   {downloadingPdf ? (
                     <>
@@ -398,6 +496,15 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                       <span>📥 直接下载 PDF</span>
                     </>
                   )}
+                </button>
+
+                <button
+                  onClick={handleSystemPrint}
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1.5 border border-[#e6dfd8] transition-colors cursor-pointer shadow-2xs min-h-[36px]"
+                  title="唤起浏览器高精度打印"
+                >
+                  <Printer className="w-3.5 h-3.5 text-stone-600" />
+                  <span>打印</span>
                 </button>
 
                 <button
@@ -437,22 +544,29 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               </div>
             </div>
 
-            {/* Scrollable Report Content Area (Captured by html2canvas for Direct PDF) */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white border border-[#e6dfd8] rounded-2xl shadow-inner select-text">
+            {/* Scrollable Report Content Area (Captured for PDF & Print) */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white border border-[#e6dfd8] rounded-2xl shadow-inner select-text report-print-container">
               <div ref={reportRef} className="p-2 sm:p-4 bg-white">
-                <MarkdownReportRenderer content={streamingText} isStreaming={false} />
+                <MarkdownReportRenderer
+                  content={streamingText}
+                  isStreaming={false}
+                  profileSnapshot={activeReportProfile || selectedRecord?.profileSnapshot}
+                  title={activeReportTitle || selectedRecord?.title || visaContextName}
+                  token={activeReportToken || tokenInput}
+                  createdAt={activeReportCreatedAt}
+                />
               </div>
             </div>
 
             {/* Tiny Compliance Disclaimer at Bottom of Report */}
-            <div className="pt-2 text-[10px] text-stone-400 font-mono text-center leading-relaxed">
+            <div className="pt-2 text-[10px] text-stone-400 font-mono text-center leading-relaxed no-print">
               【法律免责声明】VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
             </div>
           </div>
         )}
 
         {/* ============================================================ */}
-        {/* STATE 3: IDLE (Input Redemption Code & Developer Mentorship) */}
+        {/* STATE 3: IDLE (Input Redemption Code & Mentorship Offerings) */}
         {/* ============================================================ */}
         {modalState === 'IDLE' && (
           <>

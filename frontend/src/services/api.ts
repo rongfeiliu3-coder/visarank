@@ -220,9 +220,14 @@ export function getLocalSavedReports(): SavedReportItem[] {
 export function saveLocalReport(report: SavedReportItem): void {
   try {
     const existing = getLocalSavedReports();
-    const filtered = existing.filter((r) => r.id !== report.id && r.token !== report.token);
-    const updated = [report, ...filtered];
-    localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(updated.slice(0, 30)));
+    const existingIndex = existing.findIndex((r) => r.token === report.token || (report.id && r.id === report.id));
+    if (existingIndex > -1) {
+      existing[existingIndex] = { ...existing[existingIndex], ...report };
+      localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(existing.slice(0, 30)));
+    } else {
+      const updated = [report, ...existing];
+      localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(updated.slice(0, 30)));
+    }
   } catch (err) {
     console.error('Failed to save report to localStorage:', err);
   }
@@ -235,15 +240,16 @@ export async function saveUserReport(payload: {
   profileSnapshot: any;
   reportMarkdown: string;
 }): Promise<{ success: boolean; reportId?: string; error?: string }> {
-  // Always persist to localStorage first
+  const existing = getLocalSavedReports();
+  const found = existing.find((r) => r.token === payload.token);
   const localItem: SavedReportItem = {
-    id: `rep_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    id: found?.id || `rep_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     token: payload.token,
     title: payload.title,
     context_name: payload.contextName,
     profile_snapshot: payload.profileSnapshot,
     report_markdown: payload.reportMarkdown,
-    created_at: new Date().toISOString(),
+    created_at: found?.created_at || new Date().toISOString(),
   };
   saveLocalReport(localItem);
 
@@ -288,11 +294,14 @@ export async function fetchUserSavedReports(tokenQuery?: string): Promise<{
     );
 
     if (json.success && json.data && json.data.length > 0) {
-      // Merge remote and local
+      // Merge remote and local with strict deduplication by token or id
       const map = new Map<string, SavedReportItem>();
-      localReports.forEach((r) => map.set(r.id, r));
+      localReports.forEach((r) => {
+        const key = r.token || r.id;
+        map.set(key, r);
+      });
       json.data.forEach((r: any) => {
-        map.set(r.id, {
+        const parsedReport: SavedReportItem = {
           id: r.id,
           token: r.token,
           title: r.title,
@@ -300,9 +309,14 @@ export async function fetchUserSavedReports(tokenQuery?: string): Promise<{
           profile_snapshot: typeof r.profile_snapshot === 'string' ? JSON.parse(r.profile_snapshot) : r.profile_snapshot,
           report_markdown: r.report_markdown,
           created_at: r.created_at,
-        });
+        };
+        const key = r.token || r.id;
+        map.set(key, parsedReport);
       });
-      return { success: true, data: Array.from(map.values()) };
+      const deduplicatedList = Array.from(map.values()).sort(
+        (a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+      );
+      return { success: true, data: deduplicatedList };
     }
 
     return { success: true, data: localReports };

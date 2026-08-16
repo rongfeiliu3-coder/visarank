@@ -1,9 +1,12 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-export async function downloadReportPdf(element: HTMLElement, filename = 'VisaRank-2026-Deep-Report.pdf'): Promise<boolean> {
+export async function downloadReportPdf(
+  element: HTMLElement,
+  filename = 'VisaRank-2026-Deep-Report.pdf'
+): Promise<boolean> {
   try {
-    // 1. Create high-resolution canvas snapshot of the report element
+    // 1. Create high-resolution canvas snapshot of the report element (2x Retina scale)
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -17,6 +20,7 @@ export async function downloadReportPdf(element: HTMLElement, filename = 'VisaRa
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
+      compress: true,
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
@@ -26,25 +30,27 @@ export async function downloadReportPdf(element: HTMLElement, filename = 'VisaRa
 
     let heightLeft = imgHeight;
     let position = 0;
+    let pageNum = 1;
 
     // First page
-    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
     heightLeft -= pdfHeight;
 
     // Additional pages if report exceeds 1 A4 page
     while (heightLeft > 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      pageNum += 1;
       heightLeft -= pdfHeight;
     }
 
-    // Direct client file download
+    // Direct client file download without system print dialog
     pdf.save(filename.endsWith('.pdf') ? filename : `${filename}.pdf`);
     return true;
   } catch (err) {
     console.error('Error generating direct PDF download:', err);
-    // Fallback: print dialog or text blob
+    // Fallback: system print
     window.print();
     return false;
   }

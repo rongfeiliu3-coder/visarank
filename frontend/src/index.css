@@ -90,14 +90,21 @@
   background: #cc785c;
 }
 
-/* Print optimization for VisaRank Reports */
+/* Print & PDF Export optimization for VisaRank 10+ Page Reports */
+@page {
+  size: A4 portrait;
+  margin: 18mm 15mm 18mm 15mm;
+}
+
 @media print {
   body {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #1e293b !important;
+    font-size: 11pt !important;
+    line-height: 1.6 !important;
   }
 
-  nav, footer, .no-print, header, [title="关闭"] {
+  nav, footer, .no-print, header, [title="关闭"], button {
     display: none !important;
   }
 
@@ -112,22 +119,78 @@
     background: transparent !important;
   }
 
-  .report-markdown-canvas {
-    font-size: 11pt !important;
-    line-height: 1.5 !important;
+  /* 1. Independent Cover Page */
+  .report-cover-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    min-height: 92vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 24pt 12pt !important;
+    border: 2px solid #0f172a !important;
+    border-radius: 8px !important;
+  }
+
+  /* 2. Major Chapter Section Heading Rules */
+  .report-section-h2, h2 {
+    page-break-before: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    font-size: 14pt !important;
+    margin-top: 18pt !important;
+    margin-bottom: 8pt !important;
+    color: #0f172a !important;
+    border-bottom: 1.5px solid #cbd5e1 !important;
+    padding-bottom: 4px !important;
+  }
+
+  h1 {
+    font-size: 20pt !important;
+    margin-bottom: 12pt !important;
+    color: #0f172a !important;
+  }
+
+  h3 {
+    font-size: 12pt !important;
+    margin-top: 12pt !important;
+    margin-bottom: 6pt !important;
+    color: #334155 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* 3. Anti-Break Rules for Tables, Blockquotes, Callouts */
+  table, blockquote, pre, .avoid-break, .report-callout, tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   table {
-    page-break-inside: avoid !important;
-    border-collapse: collapse !important;
+    font-size: 9.5pt !important;
     width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 10pt 0 !important;
   }
 
-  th, td {
-    border: 1px solid #d1d5db !important;
+  th {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    font-weight: bold !important;
+    padding: 6px 10px !important;
+    border: 1px solid #cbd5e1 !important;
   }
 
-  h1, h2, h3 {
-    page-break-after: avoid !important;
+  td {
+    padding: 6px 10px !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  blockquote {
+    border-left: 3px solid #c2410c !important;
+    background-color: #fff7ed !important;
+    padding: 8pt 12pt !important;
+    margin: 10pt 0 !important;
+    font-size: 10pt !important;
   }
 }
