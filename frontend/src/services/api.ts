@@ -114,6 +114,19 @@ export async function resetPasswordWithCode(input: ResetPasswordInput): Promise<
   }
 }
 
+export async function verifyReportToken(token: string, payload?: any): Promise<{ success: boolean; valid?: boolean; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/verify-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, payload }),
+    });
+    return await parseResponseJson(res, '兑换码核验失败');
+  } catch (err: any) {
+    return { success: false, error: err.message || '网络连接异常，无法核验兑换码' };
+  }
+}
+
 export async function fetchCurrentUser(): Promise<{ success: boolean; user?: User; error?: string }> {
   const token = getStoredAuthToken();
   if (!token) {

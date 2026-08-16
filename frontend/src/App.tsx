@@ -216,7 +216,12 @@ export const AppContent: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-[#252320] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#6c6a64] font-mono">
+            {/* Compliance Disclaimer Banner in Footer */}
+            <div className="pt-4 text-[10px] text-[#7a7871] font-mono leading-relaxed border-t border-[#252320]/60 text-center sm:text-left">
+              【法律免责声明】VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
+            </div>
+
+            <div className="pt-4 border-t border-[#252320] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#6c6a64] font-mono">
               <div>© 2026 VisaRank Intelligence Matrix. Inspired by OpenTheRank 3-Tier Progressive Architecture.</div>
               <div className="flex items-center gap-4">
                 <button

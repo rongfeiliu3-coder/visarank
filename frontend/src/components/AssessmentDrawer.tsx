@@ -2553,11 +2553,11 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
                             <ExternalLink className="w-3 h-3" />
                           </a>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <button
                               onClick={() => {
                                 if (onOpenConsultation) {
-                                  onOpenConsultation(`${res.countryName} · 3年落地时间线推演研报`, true);
+                                  onOpenConsultation(`${res.countryName} · ${res.primaryVisa} 10+ 页深度量化推演研报`, true);
                                 } else {
                                   setSelectedReportCountry(res);
                                 }
@@ -2565,7 +2565,7 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
                               className="px-3.5 py-1.5 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>📋 免费获取 3 年落地推演 (早鸟限时)</span>
+                              <span>📋 解锁 10+ 页深度量化推演研报 (¥19.9)</span>
                             </button>
 
                             <button

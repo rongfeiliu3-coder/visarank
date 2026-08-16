@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ENVIRONMENT = "production"
 ADMIN_SECRET = "visarank2026_master_key"
+EMAIL_FROM = "VisaRank 安全中心 <security@visarank.net>"
 
 # Cloudflare D1 Database Binding
 [[d1_databases]]

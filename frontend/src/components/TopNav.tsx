@@ -7,7 +7,7 @@ import {
   Clock,
   LogOut,
   User as UserIcon,
-  MessageCircle,
+  FileText,
 } from 'lucide-react';
 import type { CountryCode } from '@emigrant/shared';
 import { TRACKS_DATA } from '../data/mockTracks';
@@ -211,15 +211,15 @@ export const TopNav: React.FC<TopNavProps> = ({
             </button>
           )}
 
-          {/* 5. 💬 1v1 方案咨询 Text / Badge Link */}
+          {/* 5. 📑 深度报告 Text / Badge Link */}
           {onOpenConsultation && (
             <button
               onClick={onOpenConsultation}
               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-[#c2410c] hover:text-[#9a3412] bg-[#c2410c]/8 hover:bg-[#c2410c]/15 px-3 py-1.5 rounded-xl border border-[#c2410c]/20 transition-all cursor-pointer shadow-xs min-h-[36px]"
-              title="主理人 1v1 方案咨询与文书精修"
+              title="解锁 2026 全球技术移民 10+ 页深度量化推演报告"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-[#c2410c]" />
-              <span>1v1 咨询</span>
+              <FileText className="w-3.5 h-3.5 text-[#c2410c]" />
+              <span>深度研报 (¥19.9)</span>
             </button>
           )}
 
@@ -265,8 +265,8 @@ export const TopNav: React.FC<TopNavProps> = ({
                         }}
                         className="w-full text-left px-3 py-2 rounded-xl text-xs text-[#c2410c] hover:bg-[#fff7ed] flex items-center gap-1.5 cursor-pointer min-h-[44px]"
                       >
-                        <MessageCircle className="w-3.5 h-3.5 text-[#c2410c]" />
-                        <span>预约 1v1 咨询</span>
+                        <FileText className="w-3.5 h-3.5 text-[#c2410c]" />
+                        <span>10+页专属推演研报</span>
                       </button>
                     )}
                     <button

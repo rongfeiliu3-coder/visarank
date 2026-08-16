@@ -20,7 +20,6 @@ import {
   Building2,
   FileText,
   Search,
-  MessageCircle,
 } from 'lucide-react';
 import {
   PATHWAYS_REGISTRY,
@@ -496,24 +495,25 @@ export const PathwayDetailPage: React.FC<PathwayDetailPageProps> = ({
               </div>
             )}
 
-            {/* 📋 评估我的背景与该签证对口度 1v1 行动按钮 */}
+            {/* 📋 解锁 10+ 页深度量化推演研报 行动按钮 */}
             {onOpenConsultation && (
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#ffffff]/80 p-4 rounded-2xl border border-[#e6dfd8] shadow-xs">
                 <div className="space-y-0.5 text-center sm:text-left">
                   <div className="text-xs font-bold text-stone-900 flex items-center justify-center sm:justify-start gap-1.5 font-serif">
-                    <MessageCircle className="w-3.5 h-3.5 text-[#c2410c]" />
-                    <span>不确定自身背景是否能精准匹配该签证法案？</span>
+                    <FileText className="w-3.5 h-3.5 text-[#c2410c]" />
+                    <span>需要该签证全景 36 个月落地时间线与职业代码排雷？</span>
                   </div>
                   <div className="text-[11px] text-stone-600 font-sans">
-                    由名校理工科硕博团队 1v1 排查职业代码卡点、高命中英文文书精修与海外学业/论文护航
+                    涵盖 14 国打分逐项拆解、ANZSCO 职业代码精准锚定与真实薪资中位数模型
                   </div>
                 </div>
 
                 <button
-                  onClick={() => onOpenConsultation(currentPathway.name)}
+                  onClick={() => onOpenConsultation(`${currentPathway.name} 10+ 页深度量化推演研报`)}
                   className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-bold font-sans shadow-xs hover:shadow-md transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer transform hover:-translate-y-0.5 shrink-0"
                 >
-                  <span>📋 评估我的背景与该签证对口度</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>解锁 10+ 页深度量化推演研报 (¥19.9)</span>
                   <span className="text-xs font-bold">→</span>
                 </button>
               </div>

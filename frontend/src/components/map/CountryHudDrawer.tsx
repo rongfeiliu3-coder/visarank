@@ -11,7 +11,7 @@ import {
   Scale,
   Compass,
   ExternalLink,
-  MessageCircle,
+  FileText,
   AlertTriangle,
 } from 'lucide-react';
 import type { CountryCode } from '@emigrant/shared';
@@ -280,11 +280,11 @@ export const CountryHudDrawer: React.FC<CountryHudDrawerProps> = ({
               </p>
               {onOpenConsultation && (
                 <button
-                  onClick={() => onOpenConsultation(`${data.name} · ${activeTrackName}`)}
+                  onClick={() => onOpenConsultation(`${data.name} · ${activeTrackName} 10+ 页深度量化推演研报`)}
                   className="w-full py-2 px-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-bold font-sans flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>💬 预约主理人 1v1 文书精修与学业/背景对冲诊断</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>📋 解锁该国 10+ 页深度量化推演研报 (¥19.9)</span>
                 </button>
               )}
             </div>
