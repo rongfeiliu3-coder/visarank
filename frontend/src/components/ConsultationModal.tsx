@@ -46,6 +46,7 @@ interface ConsultationModalProps {
   isReportPromo?: boolean;
   onOpenAssessment?: () => void;
   currentAssessmentRecord?: UserAssessmentRecord | null;
+  onUnlockAssessment?: (recordId?: string) => void;
 }
 
 const GENERATING_STEPS = [
@@ -62,6 +63,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   visaContextName = '全球多国技术移民对比方案',
   onOpenAssessment,
   currentAssessmentRecord,
+  onUnlockAssessment,
 }) => {
   // State Machine: IDLE | GENERATING | COMPLETED
   const [modalState, setModalState] = useState<ReportModalState>('IDLE');
@@ -212,6 +214,9 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
         // Stream completed -> Transition smoothly to COMPLETED
         setModalState('COMPLETED');
         setIsSaved(true);
+        if (onUnlockAssessment) {
+          onUnlockAssessment(selectedRecord?.id || 'ALL');
+        }
         // Auto-save completed report
         saveUserReport({
           token: tokenInput.trim(),
@@ -235,6 +240,9 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   const handleOpenSavedReport = (rep: SavedReportItem) => {
     setStreamingText(rep.report_markdown);
     setIsSaved(true);
+    if (onUnlockAssessment) {
+      onUnlockAssessment(rep.id);
+    }
     setModalState('COMPLETED');
   };
 

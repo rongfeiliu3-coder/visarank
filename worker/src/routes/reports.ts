@@ -112,13 +112,14 @@ reportsRouter.post('/verify-and-generate', async (c) => {
     const budgetVal = userProfile.budget || '30 - 50 万人民币';
     const workExpVal = userProfile.experience_years ? `${userProfile.experience_years} 年全职` : '3 年全职开发';
 
-    const systemPrompt = `你现在是 VisaRank 的首席全球移民法案量化精算师、资深跨境劳动力市场专家。
-请根据传入的用户画像 JSON 数据，输出一份极其硬核、数据详实、篇幅宏大（不少于 4500 字，对应 10+ 页 A4 研报体量）的《2026 全球技术移民与永居确定性深度量化推演研报》。
+    const systemPrompt = `你现在是 VisaRank 的首席全球移民法案量化精算师、资深跨境劳动力市场战略专家。
+请根据传入的用户画像 JSON 数据，输出一份极其硬核、数据详实、篇幅宏大（不少于 4800 字，对应 10+ 页 A4 投行级研报体量）的《2026 全球技术移民与永居确定性深度量化推演研报》。
 
 【硬性输出准则】：
 1. 绝对不要寒暄与开场白，第一行直接输出研报大标题与用户画像。
 2. 杜绝一切空洞套话，所有分析必须精确到具体数字（法定税率、时薪中位数、房租区间、职业代码 ANZSCO/NOC、月份推进节点）。
-3. 严格按照以下 8 个章节输出，大量使用 Markdown 表格、引用块（> 💡 策略提示 / > ⚠️ 风险警示 / > 💼 下一步）与 Checklist。
+3. 必须在第 09 章节提供对应目标国家的官方移民局法案、职业评估机构与劳动力统计局原版权威网址（HTTPS 直链）。
+4. 严格按照以下 9 个章节输出，大量使用 Markdown 表格、引用块（> 💡 策略提示 / > ⚠️ 风险警示 / > 💼 下一步）与 Checklist。
 
 【报告输出模板】：
 
@@ -230,6 +231,17 @@ reportsRouter.post('/verify-and-generate', async (c) => {
 
 ---
 
+## 09. 移民局官方立法原案、职业评估机构与劳动力统计局权威直链表
+
+| 机构职能 | 官方机构名称 | 权威官方网址 (HTTPS) | 关键核验指引 |
+| :--- | :--- | :--- | :--- |
+| **官方移民局** | [目标国移民局全称] | [官方网址，如 https://www.immigration.govt.nz / https://immi.homeaffairs.gov.au / https://www.canada.ca / https://www.make-it-in-germany.com] | 最新法案条款、EOI 邀请池状态、官方申请 Portal |
+| **法定职业评估机构** | [如 ACS / NZQA / WES / Engineers Australia / Anabin] | [官方认证网址] | 学历海外等效认证 (IQA/ECA)、工作经验扣减年限判定 |
+| **国家统计与劳工局** | [如 Stats NZ / Fair Work Ombudsman / Destatis / CSO] | [官方薪资统计网址] | 官方中位数时薪门槛、法定最低薪资法案原件 |
+| **紧缺职业清单清单** | [如 Green List / CSOL / NOC 2021 / TEER 0-3] | [官方紧缺清单网址] | 紧缺加分项核对与免劳工测试雇主担保名单 |
+
+---
+
 > 💼 **下一步：1v1 技术文书与海外求职简历精修**  
 > 本研报已指明您的职业代码与文书合规风险。如需由我们的专业文书团队为您进行 **1v1 海外标准简历 (CV) 与 SOP 深度重构**，可联系顾问微信（凭本研报授权码 \`${rawToken}\` 可立减 ¥100 优惠）。
 
@@ -246,7 +258,7 @@ VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化�
           { role: 'system', content: systemPrompt },
           {
             role: 'user',
-            content: `【待推演用户量化画像数据】\n- 年龄：${ageVal}岁\n- 专业技术方向：${majorVal}\n- 最高学历：${degreeVal}\n- 语言能力：${englishVal}\n- 启动预算：${budgetVal}\n- 累计工龄：${workExpVal}\n- 目标首选通道：${targetFieldVal}\n\n请立即按照 8 个完整章节生成不少于 4500 字的深度研报，杜绝废话与客套：`,
+            content: `【待推演用户量化画像数据】\n- 年龄：${ageVal}岁\n- 专业技术方向：${majorVal}\n- 最高学历：${degreeVal}\n- 语言能力：${englishVal}\n- 启动预算：${budgetVal}\n- 累计工龄：${workExpVal}\n- 目标首选通道：${targetFieldVal}\n\n请立即按照 9 个完整章节生成不少于 4800 字的深度研报（含官方原案网址），杜绝废话与客套：`,
           },
         ],
         stream: true,
@@ -484,6 +496,19 @@ function generateDeterministicHighDensityMasterReport(profile: any, token: strin
 * [ ] **第 1 步 (Day 1)**：在 NZQA 官网 (nzqa.govt.nz) 查询学历是否在豁免认证附录清单（IQA），若不在立即提交认证材料。
 * [ ] **第 2 步 (Day 2)**：对照 ANZSCO 261313 官方定义，全面清洗并重构英文简历，剔除 Helpdesk 等低技能高危词汇。
 * [ ] **第 3 步 (Day 3)**：开立目标国指定银行海外账户，配置不少于 ¥10 万元人民币的等额流动资金证明。
+
+---
+
+## 09. 移民局官方立法原案、职业评估机构与劳动力统计局权威直链表
+
+| 机构职能 | 官方机构名称 | 权威官方网址 (HTTPS) | 关键核验指引 |
+| :--- | :--- | :--- | :--- |
+| **官方移民局** | 新西兰移民局 (Immigration NZ) | \`https://www.immigration.govt.nz\` | SMC 6分制法案原件 (SM1.10) 与在线递交系统 |
+| **官方移民局 (备选)** | 澳大利亚内政部 (Home Affairs) | \`https://immi.homeaffairs.gov.au\` | SkillSelect 获邀轮候分与 189/190 州担保清单 |
+| **官方移民局 (欧洲)** | 德国联邦移民与难民局 (BAMF) | \`https://www.make-it-in-germany.com\` | 欧盟蓝卡 (§18b AufenthG) 紧缺人才申办指南 |
+| **法定学历/职业评估** | 新西兰学历资格认证局 (NZQA) | \`https://www.nzqa.govt.nz\` | 国际学历评估 (IQA) 认可等级查询入口 |
+| **法定职业评估机构** | 澳大利亚计算机协会 (ACS) | \`https://www.acs.org.au\` | ICT 职业代码技能评估 (Migration Skills Assessment) |
+| **国家统计与劳工局** | 新西兰国家统计局 (Stats NZ) | \`https://www.stats.govt.nz\` | 劳动力市场时薪中位数发布公告与季度报告 |
 
 ---
 

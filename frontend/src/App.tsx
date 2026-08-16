@@ -36,6 +36,28 @@ export const AppContent: React.FC = () => {
   const [feedbackVisaId, setFeedbackVisaId] = useState<string | undefined>();
   const [feedbackVisaName, setFeedbackVisaName] = useState<string | undefined>();
 
+  // Unlocked assessments state (persisted across sessions)
+  const [unlockedAssessmentIds, setUnlockedAssessmentIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('visarank_unlocked_assessments_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleUnlockAssessment = (recordId?: string) => {
+    const idToUnlock = recordId || 'CURRENT';
+    setUnlockedAssessmentIds((prev) => {
+      if (prev.includes(idToUnlock)) return prev;
+      const updated = [...prev, idToUnlock];
+      try {
+        localStorage.setItem('visarank_unlocked_assessments_v1', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   useEffect(() => {
     fetchCountries().then(setCountries);
     fetchVisas();
@@ -245,6 +267,7 @@ export const AppContent: React.FC = () => {
         onClose={() => setIsDrawerOpen(false)}
         targetCountry={drawerTargetCountry}
         initialRecord={selectedAssessmentRecord}
+        unlockedAssessmentIds={unlockedAssessmentIds}
         onSelectCountry={(c) => {
           setDrawerTargetCountry(c);
           setActiveCountry(c);
@@ -275,6 +298,7 @@ export const AppContent: React.FC = () => {
         isReportPromo={isConsultPromo}
         onOpenAssessment={() => handleOpenAssessment(activeCountry === 'ALL' ? 'NZ' : activeCountry)}
         currentAssessmentRecord={selectedAssessmentRecord}
+        onUnlockAssessment={handleUnlockAssessment}
       />
 
       {/* 8. 政策变动众包纠错与意见箱弹窗 */}
