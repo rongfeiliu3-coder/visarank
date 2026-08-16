@@ -65,6 +65,9 @@ export const AuthModal: React.FC = () => {
         setCountdown(60);
       } else {
         setErrorMsg(res.error || '验证码发送失败，请稍后重试');
+        if ((res as any).remainingSeconds) {
+          setCountdown((res as any).remainingSeconds);
+        }
       }
     } catch (err: any) {
       setErrorMsg(err.message || '网络连接异常');

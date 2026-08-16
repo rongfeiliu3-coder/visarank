@@ -179,21 +179,23 @@ authRouter.post('/send-code', async (c) => {
       }
     }
 
-    // Rate Limiting: Check if code requested in last 60 seconds
-    const sixtySecondsAgo = Date.now() - 60 * 1000;
+    // Rate Limiting: Check if code requested in last 60 seconds (10 min TTL -> expires_at > now + 9 min)
+    const threshold = Date.now() + 9 * 60 * 1000;
     const recentCode: any = await c.env.DB.prepare(
       `SELECT id, expires_at FROM verification_codes
        WHERE email = ? AND purpose = ? AND expires_at > ?
-       ORDER BY created_at DESC LIMIT 1`
+       ORDER BY expires_at DESC LIMIT 1`
     )
-      .bind(normalizedEmail, purpose, sixtySecondsAgo + 9 * 60 * 1000) // created within last 60s
+      .bind(normalizedEmail, purpose, threshold)
       .first();
 
     if (recentCode) {
+      const waitSeconds = Math.max(1, Math.ceil((recentCode.expires_at - threshold) / 1000));
       return c.json(
         {
           success: false,
-          error: '请求过于频繁，请等待 60 秒后再重新获取验证码',
+          error: `验证码已发送至您的邮箱，请查收邮件或等待 ${waitSeconds} 秒后重新获取`,
+          remainingSeconds: waitSeconds,
         },
         429
       );
