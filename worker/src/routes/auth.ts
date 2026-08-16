@@ -10,7 +10,7 @@ export const authRouter = new Hono<Env>();
  */
 authRouter.post('/register', async (c) => {
   try {
-    const body = await c.req.json();
+    const body = await c.req.json().catch(() => ({}));
     const parsed = RegisterInputSchema.safeParse(body);
     if (!parsed.success) {
       return c.json(
@@ -77,7 +77,7 @@ authRouter.post('/register', async (c) => {
  */
 authRouter.post('/login', async (c) => {
   try {
-    const body = await c.req.json();
+    const body = await c.req.json().catch(() => ({}));
     const parsed = LoginInputSchema.safeParse(body);
     if (!parsed.success) {
       return c.json(

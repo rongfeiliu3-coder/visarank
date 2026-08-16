@@ -30,6 +30,24 @@ export function clearStoredAuthToken(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
+async function parseResponseJson<T>(res: Response, fallbackErrMsg = '请求处理失败'): Promise<T> {
+  const text = await res.text().catch(() => '');
+  if (!text || !text.trim()) {
+    return {
+      success: false,
+      error: res.status >= 400 ? `服务响应异常 (HTTP ${res.status})` : fallbackErrMsg,
+    } as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return {
+      success: false,
+      error: `响应解析失败 (HTTP ${res.status})`,
+    } as T;
+  }
+}
+
 export async function registerUser(input: RegisterInput): Promise<AuthResponse> {
   try {
     const res = await fetch(`${API_BASE}/auth/register`, {
@@ -37,7 +55,7 @@ export async function registerUser(input: RegisterInput): Promise<AuthResponse> 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    const json = await res.json();
+    const json = await parseResponseJson<AuthResponse>(res, '注册失败，请稍后重试');
     if (json.success && json.token) {
       setStoredAuthToken(json.token);
     }
@@ -54,7 +72,7 @@ export async function loginUser(input: LoginInput): Promise<AuthResponse> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-    const json = await res.json();
+    const json = await parseResponseJson<AuthResponse>(res, '登录失败，请检查账号密码');
     if (json.success && json.token) {
       setStoredAuthToken(json.token);
     }
@@ -79,7 +97,7 @@ export async function fetchCurrentUser(): Promise<{ success: boolean; user?: Use
       clearStoredAuthToken();
       return { success: false, error: '登录态失效' };
     }
-    return await res.json();
+    return await parseResponseJson<{ success: boolean; user?: User; error?: string }>(res, '获取用户信息失败');
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -109,7 +127,7 @@ export async function saveAssessmentRecord(input: SaveAssessmentInput): Promise<
       headers,
       body: JSON.stringify(input),
     });
-    return await res.json();
+    return await parseResponseJson(res, '保存测算方案失败');
   } catch (err: any) {
     // Fallback: store locally if network/backend offline
     const localId = `local_${Date.now()}`;
@@ -140,7 +158,7 @@ export async function fetchAssessmentHistory(): Promise<{ success: boolean; data
       },
     });
     if (res.ok) {
-      return await res.json();
+      return await parseResponseJson(res, '获取历史记录失败');
     }
   } catch (err) {
     console.warn('Backend history fetch error, fallback to local cache:', err);
@@ -162,7 +180,7 @@ export async function submitFeedback(data: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return await res.json();
+    return await parseResponseJson(res, '提交反馈失败');
   } catch (err: any) {
     const localFeedbacks = JSON.parse(localStorage.getItem('local_feedbacks') || '[]');
     localFeedbacks.unshift({ ...data, id: `local_${Date.now()}`, createdAt: new Date().toISOString() });
@@ -184,7 +202,7 @@ export async function fetchAdminOverview(secret: string): Promise<{ success: boo
       }
       return { success: false, error: `服务器异常 (${res.status})` };
     }
-    return await res.json();
+    return await parseResponseJson(res, '获取数据大盘失败');
   } catch (err: any) {
     return { success: false, error: err.message || '网络连接失败' };
   }
@@ -200,7 +218,7 @@ export async function fetchAdminFeedbacks(secret: string): Promise<{ success: bo
     if (!res.ok) {
       return { success: false, error: '获取反馈数据失败' };
     }
-    return await res.json();
+    return await parseResponseJson(res, '获取反馈列表失败');
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -216,7 +234,7 @@ export async function fetchAdminUsers(secret: string): Promise<{ success: boolea
     if (!res.ok) {
       return { success: false, error: '获取用户列表失败' };
     }
-    return await res.json();
+    return await parseResponseJson(res, '获取用户列表失败');
   } catch (err: any) {
     return { success: false, error: err.message };
   }

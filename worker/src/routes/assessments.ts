@@ -24,7 +24,7 @@ async function extractUserId(c: any): Promise<string | null> {
  */
 assessmentsRouter.post('/save', async (c) => {
   try {
-    const body = await c.req.json();
+    const body = await c.req.json().catch(() => ({}));
     const parsed = SaveAssessmentInputSchema.safeParse(body);
     if (!parsed.success) {
       return c.json(

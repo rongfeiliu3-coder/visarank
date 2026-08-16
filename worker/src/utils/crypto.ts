@@ -146,6 +146,7 @@ export async function signJwt(
   const tokenPayload: AuthTokenPayload = {
     userId: payload.userId,
     email: payload.email,
+    role: payload.role,
     exp,
   };
 

@@ -105,4 +105,4 @@ INSERT OR REPLACE INTO occupations (id, country_code, standard, code, title, chi
 
 -- 4. Initial Admin User (Rongfei)
 INSERT OR REPLACE INTO users (id, email, password_hash, name, role, created_at, last_login_at) VALUES
-('usr_admin_rongfei', 'rongfeiliu3@gmail.com', 'e4c1c8bec357d273a67de2d925d919fd:88e40352f0a2f4883c67de70a49bad55bba5273b5c10b6e7d4c190b0e02aba1a', 'Rongfei (Admin)', 'admin', '2026-08-01 00:00:00', datetime('now'));
+('usr_admin_rongfei', 'rongfeiliu3@gmail.com', 'fbd3c424d5bdafb9c13f38e3dd886967:e6801c93f0c66da68287ac71ed45c8d415ca0da36effc8dab1ed0eebf72dc3db', 'Rongfei (Admin)', 'admin', '2026-08-01 00:00:00', datetime('now'));

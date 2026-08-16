@@ -25,6 +25,29 @@ app.use(
   })
 );
 
+// Global Error & Exception Boundary (Guarantees JSON payload on 500 errors)
+app.onError((err, c) => {
+  console.error('Unhandled Worker Exception:', err);
+  return c.json(
+    {
+      success: false,
+      error: err.message || '服务器内部异常，请稍后重试',
+    },
+    500
+  );
+});
+
+// Global 404 Handler (Guarantees JSON payload on non-existent endpoints)
+app.notFound((c) => {
+  return c.json(
+    {
+      success: false,
+      error: `API 接口未找到: ${c.req.method} ${c.req.path}`,
+    },
+    404
+  );
+});
+
 // Mount Subrouters
 app.route('/api/auth', authRouter);
 app.route('/api/assessments', assessmentsRouter);
@@ -254,7 +277,7 @@ app.get('/api/rules/:visaId', async (c) => {
 // 5. Unified Intelligent Evaluation Endpoint
 app.post('/api/evaluate', async (c) => {
   try {
-    const body = await c.req.json();
+    const body = await c.req.json().catch(() => ({}));
     const parsed = EvaluationRequestSchema.safeParse(body);
 
     if (!parsed.success) {
