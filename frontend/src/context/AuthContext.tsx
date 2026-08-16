@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { User, LoginInput, RegisterInput } from '@emigrant/shared';
+import type { User, LoginInput, RegisterInput, ResetPasswordInput } from '@emigrant/shared';
 import {
   fetchCurrentUser,
   loginUser,
   registerUser,
+  resetPasswordWithCode,
   logoutUser,
   getStoredAuthToken,
 } from '../services/api';
@@ -15,11 +16,12 @@ interface AuthContextType {
   isLoading: boolean;
   login: (input: LoginInput) => Promise<{ success: boolean; error?: string }>;
   register: (input: RegisterInput) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (input: ResetPasswordInput) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthModalOpen: boolean;
-  authModalMode: 'login' | 'register';
+  authModalMode: 'login' | 'register' | 'forgot_password';
   authModalPrompt: string | null;
-  openAuthModal: (mode?: 'login' | 'register', onSuccess?: () => void, prompt?: string) => void;
+  openAuthModal: (mode?: 'login' | 'register' | 'forgot_password', onSuccess?: () => void, prompt?: string) => void;
   closeAuthModal: () => void;
   authModalOnSuccess: (() => void) | null;
   triggerPendingAction: () => void;
@@ -32,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(getStoredAuthToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | 'forgot_password'>('login');
   const [authModalPrompt, setAuthModalPrompt] = useState<string | null>(null);
   const [authModalOnSuccess, setAuthModalOnSuccess] = useState<(() => void) | null>(null);
 
@@ -80,13 +82,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error || '注册失败' };
   };
 
+  const handleResetPassword = async (input: ResetPasswordInput) => {
+    setIsLoading(true);
+    const res = await resetPasswordWithCode(input);
+    setIsLoading(false);
+    if (res.success && res.user && res.token) {
+      setUser(res.user);
+      setToken(res.token);
+      return { success: true };
+    }
+    return { success: false, error: res.error || '重置密码失败' };
+  };
+
   const handleLogout = async () => {
     await logoutUser();
     setUser(null);
     setToken(null);
   };
 
-  const openAuthModal = (mode: 'login' | 'register' = 'login', onSuccess?: () => void, prompt?: string) => {
+  const openAuthModal = (mode: 'login' | 'register' | 'forgot_password' = 'login', onSuccess?: () => void, prompt?: string) => {
     setAuthModalMode(mode);
     setAuthModalPrompt(prompt || null);
     setAuthModalOnSuccess(() => onSuccess || null);
@@ -115,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login: handleLogin,
         register: handleRegister,
+        resetPassword: handleResetPassword,
         logout: handleLogout,
         isAuthModalOpen,
         authModalMode,

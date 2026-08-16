@@ -46,3 +46,14 @@ export interface SaveAssessmentInput {
   profileSnapshot: any;
   resultSnapshot: any;
 }
+
+export interface SendCodeInput {
+  email: string;
+  purpose?: 'reset_password' | 'register_verify' | 'login_verify';
+}
+
+export interface ResetPasswordInput {
+  email: string;
+  code: string;
+  newPassword: string;
+}

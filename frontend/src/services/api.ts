@@ -12,6 +12,8 @@ import type {
   AuthResponse,
   SaveAssessmentInput,
   UserAssessmentRecord,
+  SendCodeInput,
+  ResetPasswordInput,
 } from '@emigrant/shared';
 
 const envApiUrl = (import.meta as any).env?.VITE_API_URL || 'https://visarank-api.rongfeiliu3.workers.dev';
@@ -79,6 +81,36 @@ export async function loginUser(input: LoginInput): Promise<AuthResponse> {
     return json;
   } catch (err: any) {
     return { success: false, error: err.message || '网络异常，登录失败' };
+  }
+}
+
+export async function sendVerificationCode(input: SendCodeInput): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/send-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    return await parseResponseJson(res, '发送验证码失败');
+  } catch (err: any) {
+    return { success: false, error: err.message || '网络异常，发送验证码失败' };
+  }
+}
+
+export async function resetPasswordWithCode(input: ResetPasswordInput): Promise<AuthResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    const json = await parseResponseJson<AuthResponse>(res, '重置密码失败');
+    if (json.success && json.token) {
+      setStoredAuthToken(json.token);
+    }
+    return json;
+  } catch (err: any) {
+    return { success: false, error: err.message || '网络异常，重置密码失败' };
   }
 }
 

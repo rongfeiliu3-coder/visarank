@@ -8,6 +8,8 @@ export interface Env {
     DEEPSEEK_API_KEY?: string;
     JWT_SECRET?: string;
     ADMIN_SECRET?: string;
+    RESEND_API_KEY?: string;
+    EMAIL_FROM?: string;
   };
   Variables: {
     requestId: string;

@@ -196,6 +196,74 @@ async function main() {
   });
 
   // -------------------------------------------------------------
+  // SUITE 3.5: Resend Email Code & Password Reset Flow
+  // -------------------------------------------------------------
+  console.log('\n📦 SUITE 3.5: Resend Email Code & Password Reset Flow');
+
+  await runTest('Auth: Send Code Non-Existent', 'Send code for non-existent email should return 400', async () => {
+    const { status, json } = await safeFetchJson(`${API_BASE}/auth/send-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: `not_found_${Date.now()}@visarank.net`,
+        purpose: 'reset_password',
+      }),
+    });
+
+    if (status !== 400) throw new Error(`Expected 400, got ${status}`);
+    if (json.success !== false || !json.error?.includes('尚未注册')) {
+      throw new Error(`Expected unregistered error message, got ${JSON.stringify(json)}`);
+    }
+  });
+
+  await runTest('Auth: Send Code Success', `Send verification code to registered email (${testUserEmail})`, async () => {
+    const { status, ok, json } = await safeFetchJson(`${API_BASE}/auth/send-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: testUserEmail,
+        purpose: 'reset_password',
+      }),
+    });
+
+    if (!ok || status !== 200) throw new Error(`Send code failed: ${json.error}`);
+    if (!json.success || !json.message) throw new Error(`Malformed response: ${JSON.stringify(json)}`);
+  });
+
+  await runTest('Auth: Send Code Rate Limit', 'Requesting code again within 60s should return 429', async () => {
+    const { status, json } = await safeFetchJson(`${API_BASE}/auth/send-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: testUserEmail,
+        purpose: 'reset_password',
+      }),
+    });
+
+    if (status !== 429) throw new Error(`Expected 429 Rate Limit, got ${status}`);
+    if (json.success !== false || !json.error?.includes('频繁')) {
+      throw new Error(`Expected rate limit message, got ${JSON.stringify(json)}`);
+    }
+  });
+
+  await runTest('Auth: Reset Password Invalid Code', 'Reset password with wrong code should return 400', async () => {
+    const { status, json } = await safeFetchJson(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: testUserEmail,
+        code: '000000',
+        newPassword: 'BrandNewPassword2026!',
+      }),
+    });
+
+    if (status !== 400) throw new Error(`Expected 400, got ${status}`);
+    if (json.success !== false || !json.error?.includes('无效或已过期')) {
+      throw new Error(`Expected invalid code error, got ${JSON.stringify(json)}`);
+    }
+  });
+
+  // -------------------------------------------------------------
   // SUITE 4: D1 Database CRUD: User Assessment Snapshots
   // -------------------------------------------------------------
   console.log('\n📦 SUITE 4: D1 Database CRUD: User Assessment Snapshots');

@@ -182,3 +182,17 @@ CREATE TABLE IF NOT EXISTS feedbacks (
 
 CREATE INDEX IF NOT EXISTS idx_feedbacks_visa ON feedbacks(visa_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_feedbacks_created ON feedbacks(created_at);
+
+-- 10. Email Verification & Password Reset Codes
+CREATE TABLE IF NOT EXISTS verification_codes (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    code TEXT NOT NULL,
+    purpose TEXT NOT NULL CHECK (purpose IN ('reset_password', 'register_verify', 'login_verify')),
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON verification_codes(email, purpose);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_created ON verification_codes(created_at);

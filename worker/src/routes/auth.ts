@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
-import { LoginInputSchema, RegisterInputSchema } from '@emigrant/shared';
+import { LoginInputSchema, RegisterInputSchema, SendCodeInputSchema, ResetPasswordInputSchema } from '@emigrant/shared';
 import { hashPassword, verifyPassword, signJwt, verifyJwt } from '../utils/crypto';
+import { sendVerificationEmail } from '../utils/mailer';
 
 export const authRouter = new Hono<Env>();
 
@@ -137,6 +138,203 @@ authRouter.post('/login', async (c) => {
   } catch (err: any) {
     console.error('Login error:', err);
     return c.json({ success: false, error: err.message || '登录失败，请重试' }, 500);
+  }
+});
+
+/**
+ * POST /api/auth/send-code
+ * Send 6-digit verification code via Resend email
+ */
+authRouter.post('/send-code', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const parsed = SendCodeInputSchema.safeParse(body);
+    if (!parsed.success) {
+      return c.json(
+        {
+          success: false,
+          error: parsed.error.issues[0]?.message || '邮箱格式不正确',
+        },
+        400
+      );
+    }
+
+    const { email, purpose } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // If purpose is reset_password, check if user exists
+    if (purpose === 'reset_password') {
+      const userExists = await c.env.DB.prepare(`SELECT id FROM users WHERE email = ?`)
+        .bind(normalizedEmail)
+        .first();
+
+      if (!userExists) {
+        return c.json(
+          {
+            success: false,
+            error: '该邮箱尚未注册 VisaRank 账号，请先注册',
+          },
+          400
+        );
+      }
+    }
+
+    // Rate Limiting: Check if code requested in last 60 seconds
+    const sixtySecondsAgo = Date.now() - 60 * 1000;
+    const recentCode: any = await c.env.DB.prepare(
+      `SELECT id, expires_at FROM verification_codes
+       WHERE email = ? AND purpose = ? AND expires_at > ?
+       ORDER BY created_at DESC LIMIT 1`
+    )
+      .bind(normalizedEmail, purpose, sixtySecondsAgo + 9 * 60 * 1000) // created within last 60s
+      .first();
+
+    if (recentCode) {
+      return c.json(
+        {
+          success: false,
+          error: '请求过于频繁，请等待 60 秒后再重新获取验证码',
+        },
+        429
+      );
+    }
+
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeId = crypto.randomUUID();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+
+    // Save to D1
+    await c.env.DB.prepare(
+      `INSERT INTO verification_codes (id, email, code, purpose, expires_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(codeId, normalizedEmail, code, purpose, expiresAt, new Date().toISOString())
+      .run();
+
+    // Send email via Resend
+    const sendResult = await sendVerificationEmail({
+      toEmail: normalizedEmail,
+      code,
+      purpose,
+      apiKey: c.env.RESEND_API_KEY,
+      fromEmail: c.env.EMAIL_FROM,
+    });
+
+    if (!sendResult.success) {
+      return c.json(
+        {
+          success: false,
+          error: sendResult.error || '验证码邮件发送失败，请稍后重试',
+        },
+        500
+      );
+    }
+
+    return c.json({
+      success: true,
+      message: '6 位数字安全验证码已发送至您的邮箱，请在 10 分钟内完成验证。',
+      expiresInSeconds: 600,
+    });
+  } catch (err: any) {
+    console.error('Send code error:', err);
+    return c.json({ success: false, error: err.message || '发送验证码失败' }, 500);
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Verify 6-digit code and reset user password
+ */
+authRouter.post('/reset-password', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const parsed = ResetPasswordInputSchema.safeParse(body);
+    if (!parsed.success) {
+      return c.json(
+        {
+          success: false,
+          error: parsed.error.issues[0]?.message || '重置密码信息格式不正确',
+        },
+        400
+      );
+    }
+
+    const { email, code, newPassword } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
+    const nowTimestamp = Date.now();
+
+    // Verify code in D1
+    const validCodeRecord: any = await c.env.DB.prepare(
+      `SELECT id, expires_at, used_at FROM verification_codes
+       WHERE email = ? AND code = ? AND purpose = 'reset_password' AND used_at IS NULL AND expires_at > ?
+       ORDER BY created_at DESC LIMIT 1`
+    )
+      .bind(normalizedEmail, code.trim(), nowTimestamp)
+      .first();
+
+    if (!validCodeRecord) {
+      return c.json(
+        {
+          success: false,
+          error: '验证码无效或已过期，请核对后重新输入或重新获取',
+        },
+        400
+      );
+    }
+
+    // Check user existence
+    const userRow: any = await c.env.DB.prepare(`SELECT * FROM users WHERE email = ?`)
+      .bind(normalizedEmail)
+      .first();
+
+    if (!userRow) {
+      return c.json({ success: false, error: '未找到该邮箱对应的用户账号' }, 404);
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+    const nowIso = new Date().toISOString();
+
+    // Update password in DB
+    await c.env.DB.prepare(
+      `UPDATE users SET password_hash = ?, last_login_at = ? WHERE email = ?`
+    )
+      .bind(newPasswordHash, nowIso, normalizedEmail)
+      .run();
+
+    // Mark verification code as used
+    await c.env.DB.prepare(
+      `UPDATE verification_codes SET used_at = ? WHERE id = ?`
+    )
+      .bind(nowTimestamp, validCodeRecord.id)
+      .run();
+
+    const userRole = userRow.role || (normalizedEmail === 'rongfeiliu3@gmail.com' ? 'admin' : 'user');
+
+    const user = {
+      id: userRow.id,
+      email: userRow.email,
+      name: userRow.name || userRow.email.split('@')[0],
+      role: userRole,
+      createdAt: userRow.created_at,
+      lastLoginAt: nowIso,
+    };
+
+    const token = await signJwt(
+      { userId: userRow.id, email: userRow.email, role: userRole },
+      c.env.JWT_SECRET
+    );
+
+    return c.json({
+      success: true,
+      message: '密码重置成功！已为您自动登录',
+      user,
+      token,
+    });
+  } catch (err: any) {
+    console.error('Reset password error:', err);
+    return c.json({ success: false, error: err.message || '重置密码失败，请重试' }, 500);
   }
 });
 
