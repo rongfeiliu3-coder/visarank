@@ -267,12 +267,14 @@ export const AppContent: React.FC = () => {
       {/* 6. High-End Frosted Glass Auth Modal (Progressive Conversion) */}
       <AuthModal />
 
-      {/* 7. 主理人 1v1 方案咨询与文书精修毛玻璃弹窗 */}
+      {/* 7. ¥19.9 深度量化推演研报兑换与流式生成弹窗 */}
       <ConsultationModal
         isOpen={isConsultModalOpen}
         onClose={() => setIsConsultModalOpen(false)}
         visaContextName={consultVisaName}
         isReportPromo={isConsultPromo}
+        onOpenAssessment={() => handleOpenAssessment(activeCountry === 'ALL' ? 'NZ' : activeCountry)}
+        currentAssessmentRecord={selectedAssessmentRecord}
       />
 
       {/* 8. 政策变动众包纠错与意见箱弹窗 */}

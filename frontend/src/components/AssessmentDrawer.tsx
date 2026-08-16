@@ -27,6 +27,7 @@ import {
   Check,
   School,
   Edit3,
+  Lock,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type {
@@ -2426,116 +2427,183 @@ export const AssessmentDrawer: React.FC<AssessmentDrawerProps> = ({
                           {res.whyMatched}
                         </p>
 
-                        {/* ⚠️ FATAL BOTTLENECKS SPECIAL CARD */}
-                        <div className="p-3.5 rounded-xl bg-[#faeaea] border border-[#f5c6c6] space-y-1.5 text-xs text-[#a62828]">
-                          <div className="font-bold flex items-center gap-1.5 font-mono text-[11px]">
+                        {/* ⚠️ FATAL BOTTLENECKS SPECIAL CARD WITH BLUR LOCK */}
+                        <div className="p-3.5 rounded-2xl bg-[#faeaea] border border-[#f5c6c6] space-y-2 text-xs text-[#a62828] relative overflow-hidden">
+                          <div className="font-bold flex items-center gap-1.5 font-mono text-[11px] text-[#a62828]">
                             <AlertTriangle className="w-4 h-4 text-[#c64545]" />
                             <span>【⚠️ 核心致命软肋与客观风险警示】</span>
                           </div>
-                          <ul className="space-y-1 pl-4 list-disc text-[11px] leading-relaxed">
-                            {res.fatalBottlenecks.map((fb, fidx) => (
-                              <li key={fidx}>{fb}</li>
-                            ))}
+
+                          {/* Item 1: Displayed Clearly */}
+                          <ul className="pl-4 list-disc text-[11px] leading-relaxed">
+                            <li>{res.fatalBottlenecks[0] || '本地初级岗位竞争加剧，需要提前锁定精准紧缺职业代码与打税薪资。'}</li>
                           </ul>
+
+                          {/* Items 2+: Blurred with Floating Lock Callout */}
+                          {res.fatalBottlenecks.length > 1 && (
+                            <div className="relative mt-2 pt-1">
+                              {/* Blurred Text Lines */}
+                              <ul className="pl-4 list-disc text-[11px] leading-relaxed filter blur-[4px] opacity-40 select-none pointer-events-none space-y-1">
+                                {res.fatalBottlenecks.slice(1).map((fb, fidx) => (
+                                  <li key={fidx}>{fb}</li>
+                                ))}
+                              </ul>
+
+                              {/* Floating Lock Card */}
+                              <div className="absolute inset-0 flex items-center justify-center bg-white/35 backdrop-blur-[2px] rounded-xl p-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onOpenConsultation) {
+                                      onOpenConsultation(`${res.countryName} · ${res.primaryVisa} 10+ 页深度量化推演研报`, true);
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-white/95 border border-[#fed7aa] shadow-xs text-xs font-bold text-[#c2410c] hover:bg-[#fff7ed] hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer max-w-full"
+                                >
+                                  <Lock className="w-3.5 h-3.5 text-[#c2410c] shrink-0" />
+                                  <span className="truncate text-[11px]">
+                                    针对您背景的 {res.fatalBottlenecks.length - 1} 项潜在拒签/高额隐性成本警示已收录至研报
+                                  </span>
+                                  <span className="text-[10px] bg-[#c2410c] text-white px-1.5 py-0.5 rounded font-mono shrink-0">
+                                    解锁
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
-                        {/* 🎓 CURATED HIGH-ROI PATHWAY TIERS & SCHOOLS */}
+                        {/* 🎓 CURATED HIGH-ROI PATHWAY TIERS & SCHOOLS (LOCKED BLUR SKELETON) */}
                         {res.curatedPathways && res.curatedPathways.length > 0 && (
                           <div className="border-t border-[#e6dfd8]/70 pt-2.5">
                             {isCuratedUnlocked ? (
-                              <div className="bg-[#faf9f5] p-3.5 rounded-xl border border-[#e6dfd8] space-y-3 text-xs">
+                              <div className="relative bg-[#faf9f5] p-3.5 rounded-xl border border-[#fed7aa] space-y-3 text-xs overflow-hidden">
                                 <div className="text-[11px] font-bold text-stone-800 flex items-center justify-between font-mono">
-                                  <span className="flex items-center gap-1.5">
+                                  <span className="flex items-center gap-1.5 text-stone-900">
                                     <School className="w-3.5 h-3.5 text-[#c2410c]" />
-                                    <span>【{res.countryName}】高 ROI 示范课程与代表院校梯队：</span>
+                                    <span>【{res.countryName}】高 ROI 示范课程与代表院校梯队（研报专享）：</span>
                                   </span>
                                   <button
                                     onClick={() => setUnlockedCuratedCountry(null)}
-                                    className="text-stone-400 hover:text-stone-700 text-[10px]"
+                                    className="text-stone-400 hover:text-stone-700 text-[10px] cursor-pointer"
                                   >
                                     收起 ↑
                                   </button>
                                 </div>
 
-                                <div className="space-y-2.5">
-                                  {res.curatedPathways.map((cp, cidx) => (
-                                    <div
-                                      key={cidx}
-                                      className="p-3 rounded-xl bg-[#efe9de]/50 border border-[#e6dfd8] space-y-1"
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <span className="font-bold text-stone-900 text-xs">{cp.pathwayName}</span>
-                                        <span className="text-[10px] font-mono text-stone-500 bg-[#faf9f5] px-2 py-0.5 rounded border border-[#e6dfd8]">
-                                          {cp.duration}
-                                        </span>
-                                      </div>
-                                      <div className="text-[11px] text-[#c2410c] font-mono font-medium">
-                                        代表院校：{cp.representativeSchools.join('、')}
-                                      </div>
-                                      <p className="text-[11px] text-stone-600 leading-relaxed">
-                                        {cp.highlights}（参考学费：{cp.estimatedTuition}）
-                                      </p>
-                                    </div>
-                                  ))}
+                                {/* Blurred Skeleton Text */}
+                                <div className="space-y-2.5 filter blur-[5px] opacity-35 select-none pointer-events-none">
+                                  <div className="p-3 rounded-xl bg-stone-200/80 border border-stone-300 space-y-1">
+                                    <div className="h-4 bg-stone-300 rounded w-1/3" />
+                                    <div className="h-3 bg-stone-300 rounded w-2/3" />
+                                    <div className="h-3 bg-stone-300 rounded w-full" />
+                                  </div>
+                                  <div className="p-3 rounded-xl bg-stone-200/80 border border-stone-300 space-y-1">
+                                    <div className="h-4 bg-stone-300 rounded w-1/2" />
+                                    <div className="h-3 bg-stone-300 rounded w-3/4" />
+                                  </div>
+                                </div>
+
+                                {/* Floating Unlock Overlay */}
+                                <div className="absolute inset-0 top-6 flex flex-col items-center justify-center bg-gradient-to-t from-[#faf9f5] via-[#faf9f5]/85 to-transparent backdrop-blur-[2px] p-3 text-center space-y-2">
+                                  <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5 font-serif">
+                                    <Lock className="w-4 h-4 text-[#c2410c]" />
+                                    <span>【{res.countryName}】{res.curatedPathways.length} 个代表院校与对口高 ROI 课程已锁定</span>
+                                  </div>
+                                  <p className="text-[11px] text-stone-500 max-w-sm">
+                                    基于官方最新毕业工签时长与本地紧缺专业清单量化筛选
+                                  </p>
+                                  <button
+                                    onClick={() => {
+                                      if (onOpenConsultation) {
+                                        onOpenConsultation(`${res.countryName} · 高 ROI 示范课程与代表院校研报`, true);
+                                      }
+                                    }}
+                                    className="px-4 py-2 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-bold shadow-xs hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <Lock className="w-3.5 h-3.5" />
+                                    <span>解锁研报查看完整推演 (¥19.9)</span>
+                                  </button>
                                 </div>
                               </div>
                             ) : (
                               <button
                                 onClick={() => setUnlockedCuratedCountry(res.countryCode)}
-                                className="w-full py-2 px-3 rounded-xl bg-[#efe9de]/70 hover:bg-[#efe9de] border border-[#e6dfd8] text-xs text-stone-700 font-medium flex items-center justify-between transition-colors cursor-pointer"
+                                className="w-full py-2.5 px-3.5 rounded-xl bg-[#efe9de]/70 hover:bg-[#efe9de] border border-[#e6dfd8] text-xs text-stone-700 font-medium flex items-center justify-between transition-colors cursor-pointer"
                               >
                                 <span className="flex items-center gap-1.5 text-[11px]">
                                   <School className="w-3.5 h-3.5 text-[#c2410c]" />
                                   <span>查看该国高 ROI 示范课程方案与代表院校 ({res.curatedPathways.length} 个精选方案)</span>
                                 </span>
-                                <span className="text-[#c2410c] text-[11px] font-bold">展开院校 ↓</span>
+                                <span className="text-[#c2410c] text-[11px] font-bold flex items-center gap-1">
+                                  <Lock className="w-3 h-3 text-[#c2410c]" />
+                                  <span>解锁查看 ↓</span>
+                                </span>
                               </button>
                             )}
                           </div>
                         )}
 
-                        {/* 3-Year Timeline Plan (Progressive Unlock) */}
+                        {/* 3-Year Timeline Plan (LOCKED BLUR SKELETON) */}
                         {res.timeline3YearPlan && (
                           <div className="border-t border-[#e6dfd8]/70 pt-2.5">
                             {isTimelineUnlocked ? (
-                              <div className="bg-[#faf9f5] p-3.5 rounded-xl border border-[#e6dfd8] space-y-2 text-xs">
+                              <div className="relative bg-[#faf9f5] p-3.5 rounded-xl border border-[#fed7aa] space-y-3 text-xs overflow-hidden">
                                 <div className="text-[11px] font-bold text-stone-800 flex items-center justify-between font-mono">
-                                  <span className="flex items-center gap-1.5">
+                                  <span className="flex items-center gap-1.5 text-stone-900">
                                     <Clock className="w-3.5 h-3.5 text-[#c2410c]" />
-                                    <span>【{res.countryName}】3 年落地全景时间线甘特规划：</span>
+                                    <span>【{res.countryName}】3 年落地全景时间线甘特规划（研报专享）：</span>
                                   </span>
                                   <button
                                     onClick={() => setUnlockedTimelineCountry(null)}
-                                    className="text-stone-400 hover:text-stone-700 text-[10px]"
+                                    className="text-stone-400 hover:text-stone-700 text-[10px] cursor-pointer"
                                   >
                                     收起 ↑
                                   </button>
                                 </div>
-                                <div className="space-y-1.5 text-[11px] text-stone-600">
-                                  <div>
-                                    <span className="font-bold text-stone-800 font-mono">第 1 年：</span>
-                                    {res.timeline3YearPlan.year1}
+
+                                {/* Blurred Skeleton Timeline */}
+                                <div className="space-y-2 filter blur-[5px] opacity-35 select-none pointer-events-none">
+                                  <div className="h-4 bg-stone-300 rounded w-5/6" />
+                                  <div className="h-4 bg-stone-300 rounded w-4/6" />
+                                  <div className="h-4 bg-stone-300 rounded w-full" />
+                                </div>
+
+                                {/* Floating Unlock Overlay */}
+                                <div className="absolute inset-0 top-6 flex flex-col items-center justify-center bg-gradient-to-t from-[#faf9f5] via-[#faf9f5]/85 to-transparent backdrop-blur-[2px] p-3 text-center space-y-2">
+                                  <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5 font-serif">
+                                    <Lock className="w-4 h-4 text-[#c2410c]" />
+                                    <span>【{res.countryName}】3 年落地全景时间线与阶段卡点已锁定</span>
                                   </div>
-                                  <div>
-                                    <span className="font-bold text-stone-800 font-mono">第 2 年：</span>
-                                    {res.timeline3YearPlan.year2}
-                                  </div>
-                                  <div>
-                                    <span className="font-bold text-stone-800 font-mono">第 3 年：</span>
-                                    {res.timeline3YearPlan.year3}
-                                  </div>
+                                  <p className="text-[11px] text-stone-500 max-w-sm">
+                                    涵盖实习择校、关键变政窗口期与永居申报节点甘特推演
+                                  </p>
+                                  <button
+                                    onClick={() => {
+                                      if (onOpenConsultation) {
+                                        onOpenConsultation(`${res.countryName} · 3年落地时间线与阶段卡点研报`, true);
+                                      }
+                                    }}
+                                    className="px-4 py-2 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-bold shadow-xs hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <Lock className="w-3.5 h-3.5" />
+                                    <span>解锁研报查看完整推演 (¥19.9)</span>
+                                  </button>
                                 </div>
                               </div>
                             ) : (
                               <button
                                 onClick={() => setUnlockedTimelineCountry(res.countryCode)}
-                                className="w-full py-2 px-3 rounded-xl bg-[#efe9de]/70 hover:bg-[#efe9de] border border-[#e6dfd8] text-xs text-stone-700 font-medium flex items-center justify-between transition-colors cursor-pointer"
+                                className="w-full py-2.5 px-3.5 rounded-xl bg-[#efe9de]/70 hover:bg-[#efe9de] border border-[#e6dfd8] text-xs text-stone-700 font-medium flex items-center justify-between transition-colors cursor-pointer"
                               >
                                 <span className="flex items-center gap-1.5 text-[11px]">
                                   <Clock className="w-3.5 h-3.5 text-[#c2410c]" />
                                   <span>查看该国 3 年落地全景时间线与阶段卡点</span>
                                 </span>
-                                <span className="text-[#c2410c] text-[11px] font-bold">展开时间线 ↓</span>
+                                <span className="text-[#c2410c] text-[11px] font-bold flex items-center gap-1">
+                                  <Lock className="w-3 h-3 text-[#c2410c]" />
+                                  <span>解锁查看 ↓</span>
+                                </span>
                               </button>
                             )}
                           </div>

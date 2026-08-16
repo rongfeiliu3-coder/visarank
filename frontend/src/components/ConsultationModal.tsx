@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Check,
@@ -16,20 +16,29 @@ import {
   QrCode,
   CheckCircle2,
   RefreshCw,
+  FolderPlus,
+  ArrowRight,
+  ChevronDown,
+  Lock,
 } from 'lucide-react';
-import { streamVerifyAndGenerateReport } from '../services/api';
+import { streamVerifyAndGenerateReport, fetchAssessmentHistory } from '../services/api';
+import type { UserAssessmentRecord } from '@emigrant/shared';
 
 interface ConsultationModalProps {
   isOpen: boolean;
   onClose: () => void;
   visaContextName?: string;
   isReportPromo?: boolean;
+  onOpenAssessment?: () => void;
+  currentAssessmentRecord?: UserAssessmentRecord | null;
 }
 
 export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   isOpen,
   onClose,
   visaContextName = '全球多国技术移民对比方案',
+  onOpenAssessment,
+  currentAssessmentRecord,
 }) => {
   const [tokenInput, setTokenInput] = useState('');
   const [verifying, setVerifying] = useState(false);
@@ -40,8 +49,37 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   const [streamingText, setStreamingText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
 
+  // History Assessment Records State
+  const [historyRecords, setHistoryRecords] = useState<UserAssessmentRecord[]>([]);
+  const [selectedRecordId, setSelectedRecordId] = useState<string>('');
+  const [loadingRecords, setLoadingRecords] = useState<boolean>(false);
+
   const contactWeChat = '16621698016';
   const xiaohongshuStoreUrl = 'https://www.xiaohongshu.com'; // 小红书官方小店链接
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingRecords(true);
+      fetchAssessmentHistory().then((res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          setHistoryRecords(res.data);
+          // If currentAssessmentRecord exists and matches, pick it, else pick the latest
+          if (currentAssessmentRecord) {
+            setSelectedRecordId(currentAssessmentRecord.id);
+          } else {
+            setSelectedRecordId(res.data[0]?.id || '');
+          }
+        } else if (currentAssessmentRecord) {
+          setHistoryRecords([currentAssessmentRecord]);
+          setSelectedRecordId(currentAssessmentRecord.id);
+        } else {
+          setHistoryRecords([]);
+          setSelectedRecordId('');
+        }
+        setLoadingRecords(false);
+      });
+    }
+  }, [isOpen, currentAssessmentRecord]);
 
   if (!isOpen) return null;
 
@@ -56,6 +94,8 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     }
   };
 
+  const selectedRecord = historyRecords.find((r) => r.id === selectedRecordId) || historyRecords[0];
+
   const handleVerifyAndGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tokenInput.trim()) {
@@ -66,13 +106,25 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     setErrorMsg('');
     setVerifying(true);
 
+    const profileData = selectedRecord?.profileSnapshot || {};
+    const resultData = selectedRecord?.resultSnapshot || {};
+
     let receivedAnyChunk = false;
 
     await streamVerifyAndGenerateReport(
       tokenInput.trim(),
       {
-        contextName: visaContextName,
-        target_country: visaContextName,
+        contextName: selectedRecord?.title || visaContextName,
+        target_country: selectedRecord?.title || visaContextName,
+        age: profileData.age,
+        major: profileData.fieldCategory || profileData.major,
+        education: profileData.educationLevel,
+        language_score: profileData.englishLevel,
+        experience_years: profileData.workExperienceYears,
+        budget: profileData.targetBudget,
+        family_status: profileData.familyStatus,
+        core_goal: profileData.priorityGoal,
+        result_snapshot: resultData,
       },
       (chunk) => {
         if (!receivedAnyChunk) {
@@ -125,7 +177,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* VIEW 1: Report Active & Reader */}
+        {/* VIEW 1: Report Active & Reader (Streamed from DeepSeek) */}
         {reportActive ? (
           <div className="flex flex-col h-full space-y-4 overflow-hidden">
             {/* Report Header Bar */}
@@ -133,7 +185,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 text-[11px] font-mono font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>兑换码已验证 · 专属推演研报已生成</span>
+                  <span>兑换码已核销 · DeepSeek 专属推演研报实时生成</span>
                 </div>
                 <h3 className="font-serif text-lg sm:text-xl font-bold text-stone-900">
                   【2026 全球技术移民 10+ 页深度量化推演与避坑研报】
@@ -177,8 +229,47 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               【法律免责声明】VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
             </div>
           </div>
+        ) : historyRecords.length === 0 && !loadingRecords ? (
+          /* VIEW 2: Empty Assessment State (Must do assessment first) */
+          <div className="py-6 sm:py-8 px-2 space-y-5 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#fff7ed] border border-[#fed7aa] text-[#c2410c] flex items-center justify-center mx-auto shadow-xs">
+              <FolderPlus className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-2 max-w-md mx-auto">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#c2410c]/10 text-[#c2410c] text-[11px] font-mono font-bold">
+                <Lock className="w-3 h-3" />
+                <span>研报生成前置要求</span>
+              </div>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
+                请先完成 1 次出海背景测算
+              </h2>
+              <p className="text-xs text-stone-500 font-sans leading-relaxed">
+                VisaRank 10+ 页深度量化推演研报需要基于您的<strong>年龄、专业赛道、学历、语言成绩与预算</strong>等真实画像进行 10+ 维度法案量化推演。请先完成 1 分钟测算后解锁！
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onOpenAssessment) onOpenAssessment();
+                }}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] text-white text-xs font-bold shadow-card-hover flex items-center justify-center gap-2 cursor-pointer transition-all min-h-[44px]"
+              >
+                <span>🚀 立即开始 1 分钟智能背景测算</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Compliance Disclaimer */}
+            <div className="pt-4 border-t border-[#e6dfd8] text-[10px] font-mono text-stone-400 leading-relaxed text-center">
+              【法律免责声明】VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
+            </div>
+          </div>
         ) : (
-          /* VIEW 2: Purchase & Redemption Modal Form */
+          /* VIEW 3: Purchase & Redemption Modal Form (With Assessment Selector) */
           <div className="space-y-4 sm:space-y-5">
             {/* Header Area */}
             <div className="space-y-1.5 pr-8">
@@ -199,6 +290,39 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 拒绝中介报喜不报忧，基于官方最新法案与劳动力薪资中位数推演
               </p>
             </div>
+
+            {/* Assessment Selector Dropdown */}
+            {historyRecords.length > 0 && (
+              <div className="p-3 rounded-2xl bg-[#efe9de]/70 border border-[#e6dfd8] space-y-1.5">
+                <label className="text-xs font-bold text-stone-800 font-serif flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-[#c2410c]" />
+                    <span>选择关联的历史测算方案：</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-[#c2410c] bg-white px-2 py-0.5 rounded-full border border-[#fed7aa]">
+                    共 {historyRecords.length} 次测算记录
+                  </span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedRecordId}
+                    onChange={(e) => setSelectedRecordId(e.target.value)}
+                    className="w-full pl-3 pr-8 py-2 rounded-xl bg-white border border-[#e6dfd8] text-xs font-mono text-stone-900 focus:outline-none focus:border-[#c2410c] appearance-none cursor-pointer"
+                  >
+                    {historyRecords.map((rec) => {
+                      const results = Array.isArray(rec.resultSnapshot) ? rec.resultSnapshot : [];
+                      const topMatch = results[0]?.matchScore ? `(首选匹配度 ${results[0].matchScore}%)` : '';
+                      return (
+                        <option key={rec.id} value={rec.id}>
+                          {rec.title} {topMatch} — {rec.createdAt.substring(0, 10)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+            )}
 
             {/* 4 Core Selling Points Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -276,7 +400,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-800 font-mono flex items-center justify-between">
                   <span>输入报告激活兑换码</span>
-                  <span className="text-[10px] text-stone-400 font-normal">支持卡密一键核销</span>
+                  <span className="text-[10px] text-stone-400 font-normal">支持 16 位卡密一键核销</span>
                 </label>
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -301,7 +425,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 className="w-full py-3 rounded-xl bg-[#c2410c] hover:bg-[#9a3412] active:bg-[#7c2d12] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-card-hover transition-all cursor-pointer disabled:opacity-50 min-h-[44px]"
               >
                 {verifying ? (
-                  <span>正在验证并启动 DeepSeek 报告引擎...</span>
+                  <span>正在验证卡密并调用 DeepSeek 引擎推演...</span>
                 ) : (
                   <>
                     <FileText className="w-4 h-4" />
