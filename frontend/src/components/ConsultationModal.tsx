@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   RefreshCw,
 } from 'lucide-react';
-import { verifyReportToken } from '../services/api';
+import { streamVerifyAndGenerateReport } from '../services/api';
 
 interface ConsultationModalProps {
   isOpen: boolean;
@@ -56,88 +56,6 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
     }
   };
 
-  const generateFullReportMarkdown = (contextName: string, token: string) => {
-    return `# 【VisaRank 2026 全球技术移民 10+ 页深度量化推演与避坑研报】
-**档案序列号**：\`VR-REP-${Date.now().toString(36).toUpperCase()}\` | **授权激活码**：\`${token}\`
-**评估对象**：${contextName} | **生成时间**：${new Date().toLocaleString('zh-CN')}
-**数据基准**：2026 财年各国官方最新立法公报、ANZSCO/NOC 职业大典与法定薪资中位数数据库
-
----
-
-## Executive Summary | 核心结论与战略定调
-
-> 💡 **核心决策总评**：当前海外技术移民已全面从「粗放学历移民」转向「精准雇主技能绑定」与「高薪硬门槛优先」。根据量化推演，单纯依靠海外读研已无法自动确保永居，必须以**第一天选定目标紧缺职业代码 (ANZSCO/NOC)** 并**锁定当地中位数时薪 1.0~1.5 倍的产业带**为核心策略。
-
----
-
-## 模块一：14 国打分细则逐项拆解与被拒风险推演
-
-### 1.1 量化打分细则与硬门槛匹配矩阵
-- **年龄黄金窗口期**：25 - 32 周岁（得分峰值），33 岁后每年面临分数递减与政策窗口收紧压力；
-- **学历与认证**：海外硕士 (Level 9 / Master) 普遍获得核心支柱分，但需警惕非对口专业导致的职业评估扣减；
-- **语言硬通货**：PTE 65+ (雅思 7.0) 为基本准入门槛，PTE 79+ (雅思 8.0) 具备跨梯队降维打击优势；
-- **本地技能工作经验**：本地 1-3 年合规薪资工作经验为 14 国通用的终极加分项。
-
-### 1.2 致命软肋与核心拒签/劝退风险推演
-| 潜在风险项 | 触发概率 | 影响程度 | 官方判例与防范措施 |
-| :--- | :---: | :---: | :--- |
-| **职业评估不匹配** | 35% | 极高 (一票否决) | 课程描述与 ANZSCO/NOC 核心职责不符，导致职业评估机构 (如 ACS/VETASSESS/EA) 认定为普通从业人员。 |
-| **薪资未达法定中位数** | 42% | 高 (工签受限) | 实际打税薪资低于移民局最新法定要求（如新西兰 NZD $35/hr、英国 £38,700、德国 €41,041），直接无法递交 PR。 |
-| **配额与获邀断崖** | 28% | 中高 (等待期拉长) | 州担保/分类池择优轮候分数水涨船高，低分申请人陷入 2-3 年无效 EOI 排队。 |
-
----
-
-## 模块二：目标国职业代码 (ANZSCO / NOC) 官方精准匹配建议
-
-### 2.1 推荐对口职业代码与评估权威机构
-- **ANZSCO 261313 (Software Engineer / 软件工程师)** —— 评估机构: ACS
-  - 核心职责契合点：系统架构设计、分布式服务开发、代码重构与 API 规范。
-  - 文书避坑点：严禁将岗位职责写成基础技术支持或网页维护，必须强调系统分析与算法实现。
-- **ANZSCO 233914 (Engineering Technologist / 工程技术专家)** —— 评估机构: Engineers Australia
-  - 核心要求：完整的 CDR (Competency Demonstration Report) 三篇工程项目报告与 CPD 学习证明。
-- **NOC 21232 (Software Developers and Programmers / 加拿大)** —— 评估机构: WES / 雇主LMIA
-  - 关注要点：TEER 1 级别，重点核验薪资流水与税单一致性。
-
----
-
-## 模块三：真实落地时薪门槛、找工周期与工签转永居概率模型
-
-### 3.1 关键经济指标精算模型
-- **平均真实找工周期**：海外应届硕士约 **3.5 ~ 5.5 个月**（含本地简历改写与 3 轮技术面试周期）；
-- **起薪与中位数对齐度**：初级研发/专业技术岗平均起薪约为中位数标准的 **105% ~ 125%**，具备较强抗通胀与合规达标能力；
-- **工签转永居综合成功率模型**：
-  $$\text{PR 转化率} = 0.35 \times \text{政策确定性} + 0.30 \times \text{薪资达标率} + 0.25 \times \text{本地供需比} + 0.10 \times \text{语言优势}$$
-  当前画像在推荐通道下的综合转化指数为：**88.6% (高确定性梯队)**。
-
----
-
-## 模块四：专属 36 个月全景出海落地时间线
-
-\`\`\`
-Month 01 - 06: 【基建期】锁定目标国家与签证类别，完成 PTE/雅思首考，递交高校申请与文书重构
-Month 07 - 18: 【蓄力期】入境就读，保持 GPA 3.5+，前置准备实习，参加本地行业 Meetup 与 GitHub 社区贡献
-Month 19 - 24: 【冲刺期】毕业前 6 个月启动校园招聘与内推，锁定合规时薪 Job Offer，无缝换发毕业工签
-Month 25 - 30: 【履约期】积累满 1 年本地技能工龄，完成职业评估全套认证，核验打税税单与 Super/Kiwisaver
-Month 31 - 36: 【收获期】递交 EOI 获邀，上传全套材料清单，完成体检与无犯罪公证，锁定居留获批 (Resident Visa)
-\`\`\`
-
----
-
-## 模块五：高 ROI 选校/雇主筛选与文书排雷准则
-
-1. **选校核心原则**：优先选择自带 **Co-op 带薪实习**、拥有偏远地区/州担保额外加分（+5分）以及校友网络强大的公立大学；
-2. **雇主背景核验**：确保雇主为移民局认证雇主 (Accredited Employer)，近 2 年无劳工纠纷与重大违规处罚记录；
-3. **文书 (SOP / CV) 重构要点**：
-   - 彻底摒弃「情怀式留学动机」，改为**「以职业生涯路径为轴心的逻辑闭环」**；
-   - 详尽陈述过往项目与海外学习如何完美衔接目标国紧缺产业需求。
-
----
-
-> ⚖️ **【法律免责声明】**  
-> VisaRank 仅提供基于公开移民法案与劳动力市场大数据的量化决策分析工具，所生成报告不构成任何持牌移民代理（如 MARA/IAA/RCIC）的法律意见。涉及具体签证申请与递交，请依法咨询目标国持牌专业人士。
-    `;
-  };
-
   const handleVerifyAndGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tokenInput.trim()) {
@@ -148,38 +66,32 @@ Month 31 - 36: 【收获期】递交 EOI 获邀，上传全套材料清单，完
     setErrorMsg('');
     setVerifying(true);
 
-    try {
-      const res = await verifyReportToken(tokenInput.trim(), {
+    let receivedAnyChunk = false;
+
+    await streamVerifyAndGenerateReport(
+      tokenInput.trim(),
+      {
         contextName: visaContextName,
-      });
-
-      if (res.success && res.valid) {
-        setReportActive(true);
-        setIsStreaming(true);
-
-        const fullMarkdown = generateFullReportMarkdown(visaContextName, tokenInput.trim());
-        let currentIdx = 0;
-        setStreamingText('');
-
-        // Smooth typing stream simulation
-        const interval = setInterval(() => {
-          currentIdx += 25;
-          if (currentIdx >= fullMarkdown.length) {
-            setStreamingText(fullMarkdown);
-            setIsStreaming(false);
-            clearInterval(interval);
-          } else {
-            setStreamingText(fullMarkdown.substring(0, currentIdx));
-          }
-        }, 15);
-      } else {
-        setErrorMsg(res.error || '激活兑换码无效或已被使用，请检查后重新输入');
+        target_country: visaContextName,
+      },
+      (chunk) => {
+        if (!receivedAnyChunk) {
+          receivedAnyChunk = true;
+          setReportActive(true);
+          setIsStreaming(true);
+          setStreamingText('');
+        }
+        setStreamingText((prev) => prev + chunk);
+      },
+      () => {
+        setIsStreaming(false);
+        setVerifying(false);
+      },
+      (err) => {
+        setErrorMsg(err || '激活兑换码无效或已被使用，请检查后重新输入');
+        setVerifying(false);
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || '网络连接异常，无法核验兑换码');
-    } finally {
-      setVerifying(false);
-    }
+    );
   };
 
   const handlePrintReport = () => {

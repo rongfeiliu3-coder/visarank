@@ -196,3 +196,17 @@ CREATE TABLE IF NOT EXISTS verification_codes (
 
 CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON verification_codes(email, purpose);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_created ON verification_codes(created_at);
+
+-- 11. Activation Tokens Table (¥19.9 Deep Report Codes)
+CREATE TABLE IF NOT EXISTS activation_tokens (
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    is_used INTEGER DEFAULT 0,
+    used_at INTEGER,
+    user_email TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_activation_tokens_code ON activation_tokens(code);
+CREATE INDEX IF NOT EXISTS idx_activation_tokens_used ON activation_tokens(is_used);
+

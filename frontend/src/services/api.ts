@@ -127,6 +127,75 @@ export async function verifyReportToken(token: string, payload?: any): Promise<{
   }
 }
 
+export async function streamVerifyAndGenerateReport(
+  token: string,
+  userProfile: any,
+  onChunk: (chunk: string) => void,
+  onDone: () => void,
+  onError: (error: string) => void
+): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE}/verify-and-generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        user_profile: userProfile,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorJson = await response.json().catch(() => ({ error: '兑换码核验失败' }));
+      onError(errorJson.error || `请求失败 (${response.status})`);
+      return;
+    }
+
+    if (!response.body) {
+      onError('未收到报告生成流数据');
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        onDone();
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+
+        const dataStr = trimmed.slice(5).trim();
+        if (dataStr === '[DONE]') {
+          onDone();
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(dataStr);
+          const deltaContent = parsed.choices?.[0]?.delta?.content || '';
+          if (deltaContent) {
+            onChunk(deltaContent);
+          }
+        } catch {
+          // ignore non-json SSE lines
+        }
+      }
+    }
+  } catch (err: any) {
+    onError(err.message || '网络连接中断，报告生成失败');
+  }
+}
+
 export async function fetchCurrentUser(): Promise<{ success: boolean; user?: User; error?: string }> {
   const token = getStoredAuthToken();
   if (!token) {

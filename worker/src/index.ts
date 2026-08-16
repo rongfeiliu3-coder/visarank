@@ -10,6 +10,7 @@ import { authRouter } from './routes/auth';
 import { assessmentsRouter } from './routes/assessments';
 import { adminRouter } from './routes/admin';
 import { feedbackRouter } from './routes/feedback';
+import { reportsRouter } from './routes/reports';
 import { SITEMAP_XML, ROBOTS_TXT } from './utils/sitemapXml';
 
 const app = new Hono<Env>();
@@ -53,6 +54,8 @@ app.route('/api/auth', authRouter);
 app.route('/api/assessments', assessmentsRouter);
 app.route('/api/admin', adminRouter);
 app.route('/api/feedbacks', feedbackRouter);
+app.route('/api/reports', reportsRouter);
+app.route('/api', reportsRouter);
 
 // Dynamic Edge SEO Endpoints
 app.get('/sitemap.xml', (c) => {
