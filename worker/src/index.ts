@@ -136,7 +136,7 @@ app.post('/api/verify-token', async (c) => {
       return c.json(
         {
           success: false,
-          error: '激活兑换码无效或已被使用，请检查后重新输入，或前往小红书官方小店购买',
+          error: '激活兑换码无效或已被使用，请核对卡密后重新输入，或联系顾问微信 (16621698016) 获取',
         },
         400
       );

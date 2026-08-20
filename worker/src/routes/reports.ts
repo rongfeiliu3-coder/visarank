@@ -60,7 +60,7 @@ reportsRouter.post('/verify-and-generate', async (c) => {
           return c.json(
             {
               success: false,
-              error: '该激活兑换码已被使用（防重放拦截），无法重复生成。如需新报告请前往小红书购买',
+              error: '该激活兑换码已被使用（防重放拦截），无法重复生成。如需新报告请联系顾问微信 (16621698016) 获取',
             },
             400
           );
@@ -88,7 +88,7 @@ reportsRouter.post('/verify-and-generate', async (c) => {
           return c.json(
             {
               success: false,
-              error: '激活兑换码无效，请核对 16 位卡密后重试（可前往小红书官方小店购买）',
+              error: '激活兑换码无效，请核对 16 位卡密后重试（可联系顾问微信 16621698016 获取）',
             },
             400
           );

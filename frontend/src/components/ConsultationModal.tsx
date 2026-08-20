@@ -9,11 +9,9 @@ import {
   TrendingUp,
   CalendarDays,
   KeyRound,
-  ExternalLink,
   Download,
   FileText,
   AlertCircle,
-  QrCode,
   CheckCircle2,
   RefreshCw,
   FolderPlus,
@@ -71,7 +69,6 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   const [activeTab, setActiveTab] = useState<'generate' | 'history'>('generate');
   const [tokenInput, setTokenInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [showQr, setShowQr] = useState(false);
   const [copiedContact, setCopiedContact] = useState(false);
   const [copiedReport, setCopiedReport] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -101,7 +98,6 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
   const reportRef = useRef<HTMLDivElement>(null);
 
   const contactWeChat = '16621698016';
-  const xiaohongshuStoreUrl = 'https://www.xiaohongshu.com'; // 小红书官方小店链接
 
   useEffect(() => {
     if (isOpen) {
@@ -830,108 +826,85 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({
                       </button>
                     </form>
 
-                    {/* Prominent Purchase & Developer Direct Mentorship Area */}
-                    <div className="p-3.5 rounded-2xl bg-[#fff7ed] border border-[#fed7aa] space-y-2.5">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                        <div className="text-stone-800 font-medium flex items-center gap-1.5">
+                    {/* Prominent Developer WeChat Direct Mentorship & Token Acquisition Area */}
+                    <div className="p-4 rounded-2xl bg-[#fff7ed] border border-[#fed7aa] space-y-3.5 shadow-2xs">
+                      <div className="flex items-center justify-between gap-2 border-b border-[#fed7aa]/80 pb-2.5">
+                        <div className="text-xs font-bold text-stone-900 font-serif flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-[#c2410c] animate-ping" />
-                          <span>需要卡密或技术文书 / DIY 辅导？</span>
+                          <span>💬 暂无激活卡密？添加微信获取（¥19.9 自动秒发）· 另享文书精修 & DIY 陪跑</span>
                         </div>
+                        <span className="text-[10px] font-mono bg-white text-[#c2410c] px-2 py-0.5 rounded-full border border-[#fed7aa] font-bold">
+                          官方直连
+                        </span>
+                      </div>
 
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <a
-                            href={xiaohongshuStoreUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#ff2442] hover:bg-[#e01a35] text-white text-xs font-bold shadow-xs transition-colors"
-                          >
-                            <span>📕 前往小红书小店（¥19.9 秒发卡密）</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-
-                          <button
-                            type="button"
-                            onClick={() => setShowQr(!showQr)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-[#fed7aa] text-stone-800 hover:text-[#c2410c] text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-                          >
-                            <QrCode className="w-3.5 h-3.5 text-[#c2410c]" />
-                            <span>{showQr ? '收起咨询卡片' : '扫码咨询独立开发者 · 专业文书团队 & DIY 辅导'}</span>
-                          </button>
+                      {/* Developer Profile & WeChat Card */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 rounded-2xl bg-white border border-[#fed7aa] shadow-2xs">
+                        <div className="flex items-center gap-3.5">
+                          <img
+                            src="/wechat-qr.png"
+                            alt="主理人微信二维码"
+                            className="w-24 h-24 rounded-xl border border-[#e6dfd8] bg-white p-1 object-contain shrink-0 shadow-2xs"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/wechat-qr.jpg';
+                            }}
+                          />
+                          <div className="space-y-1.5 text-left text-xs">
+                            <div className="font-bold text-stone-900 flex items-center gap-2 font-serif text-sm">
+                              <span>网站独立开发者 & 出海学术文书团队</span>
+                              <span className="text-[10px] font-mono bg-[#fff7ed] text-[#c2410c] px-1.5 py-0.5 rounded-md border border-[#fed7aa] font-bold">
+                                1v1 直连
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-600 leading-snug">
+                              专为<strong>预算有限、拒绝传统中介数万元暴利收割</strong>的留学生与出海技术人提供专业护航。
+                            </p>
+                            <div className="text-[11px] text-stone-500 font-mono flex items-center gap-2 pt-0.5">
+                              <span>微信号: <strong className="text-stone-900">{contactWeChat}</strong></span>
+                              <button
+                                type="button"
+                                onClick={handleCopyContact}
+                                className="px-2.5 py-1 rounded-lg bg-[#fff7ed] hover:bg-[#fed7aa] text-[11px] text-[#c2410c] font-bold border border-[#fed7aa] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                {copiedContact ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span className="text-emerald-700">已复制微信号</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>点击复制微信号</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Collapsible QR Code & Developer Direct Services Box */}
-                      {showQr && (
-                        <div className="pt-3 border-t border-[#fed7aa] space-y-3 animate-in fade-in duration-200">
-                          {/* Developer Profile & WeChat Card */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 rounded-2xl bg-white border border-[#fed7aa] shadow-2xs">
-                            <div className="flex items-center gap-3.5">
-                              <img
-                                src="/wechat-qr.png"
-                                alt="主理人微信二维码"
-                                className="w-24 h-24 rounded-xl border border-[#e6dfd8] bg-white p-1 object-contain shrink-0 shadow-2xs"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = '/wechat-qr.jpg';
-                                }}
-                              />
-                              <div className="space-y-1.5 text-left text-xs">
-                                <div className="font-bold text-stone-900 flex items-center gap-2 font-serif text-sm">
-                                  <span>网站独立开发者 & 出海学术文书团队</span>
-                                  <span className="text-[10px] font-mono bg-[#fff7ed] text-[#c2410c] px-1.5 py-0.5 rounded-md border border-[#fed7aa] font-bold">
-                                    1v1 直连
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-stone-600 leading-snug">
-                                  专为<strong>预算有限、拒绝传统中介数万元暴利收割</strong>的留学生与出海技术人提供专业护航。
-                                </p>
-                                <div className="text-[11px] text-stone-500 font-mono flex items-center gap-2 pt-0.5">
-                                  <span>微信号: <strong className="text-stone-900">{contactWeChat}</strong></span>
-                                  <button
-                                    type="button"
-                                    onClick={handleCopyContact}
-                                    className="text-[11px] text-[#c2410c] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                                  >
-                                    {copiedContact ? (
-                                      <>
-                                        <Check className="w-3 h-3 text-emerald-600" />
-                                        <span>已复制微信号</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Copy className="w-3 h-3" />
-                                        <span>点击复制微信号</span>
-                                      </>
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+                      {/* 2 Focused Mentorship Offerings */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <div className="p-3 rounded-2xl bg-white/90 border border-[#fed7aa]/80 space-y-1 shadow-2xs">
+                          <div className="font-bold text-stone-900 flex items-center gap-1.5 text-xs">
+                            <FileText className="w-3.5 h-3.5 text-[#c2410c]" />
+                            <span>海外技术文书 1v1 精修 (CV / SOP)</span>
                           </div>
-
-                          {/* 2 Focused Mentorship Offerings */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                            <div className="p-3 rounded-2xl bg-white/90 border border-[#fed7aa]/80 space-y-1 shadow-2xs">
-                              <div className="font-bold text-stone-900 flex items-center gap-1.5 text-xs">
-                                <FileText className="w-3.5 h-3.5 text-[#c2410c]" />
-                                <span>海外技术文书 1v1 精修 (CV / SOP)</span>
-                              </div>
-                              <p className="text-[11px] text-stone-500 leading-relaxed">
-                                海外在职资深工程师与名校硕博团队亲笔重构，严密对齐目标国官方职业代码（ANZSCO / NOC）加分项，彻底剔除低技能拒签高危词。
-                              </p>
-                            </div>
-
-                            <div className="p-3 rounded-2xl bg-white/90 border border-[#fed7aa]/80 space-y-1 shadow-2xs">
-                              <div className="font-bold text-stone-900 flex items-center gap-1.5 text-xs">
-                                <GraduationCap className="w-3.5 h-3.5 text-[#c2410c]" />
-                                <span>高性价比 DIY 申请全流程陪跑</span>
-                              </div>
-                              <p className="text-[11px] text-stone-500 leading-relaxed">
-                                从高 ROI 选校与打分推演、WES/NZQA/ACS 职业评估认证，到签证递交材料清单核验，手把手陪跑指导，助您掌握自己出海的主动权。
-                              </p>
-                            </div>
-                          </div>
+                          <p className="text-[11px] text-stone-500 leading-relaxed">
+                            海外在职资深工程师与名校硕博团队亲笔重构，严密对齐目标国官方职业代码（ANZSCO / NOC）加分项，彻底剔除低技能拒签高危词。
+                          </p>
                         </div>
-                      )}
+
+                        <div className="p-3 rounded-2xl bg-white/90 border border-[#fed7aa]/80 space-y-1 shadow-2xs">
+                          <div className="font-bold text-stone-900 flex items-center gap-1.5 text-xs">
+                            <GraduationCap className="w-3.5 h-3.5 text-[#c2410c]" />
+                            <span>高性价比 DIY 申请全流程陪跑</span>
+                          </div>
+                          <p className="text-[11px] text-stone-500 leading-relaxed">
+                            从高 ROI 选校与打分推演、WES/NZQA/ACS 职业评估认证，到签证递交材料清单核验，手把手陪跑指导，助您掌握自己出海的主动权。
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
